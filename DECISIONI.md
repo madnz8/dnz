@@ -16,6 +16,23 @@ chiamato `dnz`, `commands/merge.md` dà `/dnz:merge`; a livello utente lo stesso
 `/dnz:merge` una volta messo in `~/.claude/commands/dnz/`. Una sottocartella `dnz/` qui
 dentro romperebbe il caso plugin (`/dnz:dnz:merge`).
 
+## Principi trasversali
+
+Valgono per **tutte** le skill consolidate, non solo per quella in cui sono emersi.
+
+### Ticket: il tracker è una casistica, non un prerequisito
+
+Non tutto il lavoro passa da un ticket Linear. Una skill può **usare** il ticket se c'è, ma
+non deve **richiederlo**: niente passi che si bloccano, niente domande all'utente, niente
+provenienze inventate quando il tracker non esiste o il lavoro non ha un'issue. Il passo che
+dipende dal ticket si salta senza rumore.
+
+Forma corretta: rilevare il tracker al passo di orientamento (Linear, Jira, GitHub Issues — o
+nessuno), e rendere condizionale ogni passo che lo usa.
+
+**Per ogni skill revisionata va dichiarato qui sotto se contiene riferimenti a Linear**, e se
+sono compatibili con questo principio.
+
 ## Stato
 
 | comando | canonico qui | note |
@@ -63,6 +80,37 @@ Scelta consapevole: il ticket va a **Done** mentre il merge è ancora solo local
 (ex 5) è l'unico non meccanico della skill — la logica sul ticket coperto solo in parte — e
 si è preferito tenerlo dentro piuttosto che perderlo. Da rivedere se in pratica capita di
 chiudere ticket per lavori che poi non vengono pushati.
+
+### 2026-09-16 — `merge`: riferimenti a Linear conformi, nessuna modifica
+
+Un solo riferimento reale, al §0, e Linear compare come **uno di tre esempi** in una lista di
+tracker possibili: *"c'è un tracker (Linear, Jira, GitHub Issues)?"*. Le altre occorrenze della
+stringa sono la parola italiana "lineare" nel sanity check del merge.
+
+Il passo che dipende dal ticket è già condizionale in tutti i punti dove serve:
+
+- §0: *"Se non lo trovi, il passo 3 semplicemente non si fa: non si inventa un ticket per avere
+  qualcosa da chiudere."*
+- §3, titolo: *"(solo se ce n'è uno)"*, e prima riga: *"Salta questo passo senza rumore se al
+  passo 0 non hai trovato né tracker né ticket."*
+- formato del messaggio di merge: *"Se non ce ne sono, si omette la parentesi — non si inventa."*
+
+**Conforme al principio. Nessuna modifica necessaria.**
+
+### 2026-09-16 — audit Linear sui 14 file: il problema è solo in `squash-story`
+
+Linear compare **solo** in `merge` e in `squash-story`. Le altre cinque skill (`release`,
+`deferred`, `ui-check`, `audit`, `journal`) non lo nominano mai.
+
+In `squash-story` il riferimento **non** è conforme, in entrambe le varianti:
+
+- **atala-portal**, righe 75 e 77: *"Si usa il ticket Linear dell'epic"* e soprattutto *"vale
+  sempre il caso 2: il ticket Linear del lavoro. **Se non esiste nemmeno quello, fermati e
+  chiedi**"* — la skill si blocca proprio nel caso da supportare;
+- **lifehacker**, riga 79: *"quando una story singola non esiste **ed esiste un ticket
+  Linear**"* — più morbido, ma il ramo "nessun ticket" non è scritto.
+
+Entrambe hardcodano anche il prefisso di team `RAW-xx`, che è di Linear e di quei due repo.
 
 ## Aperti
 
