@@ -38,7 +38,7 @@ sono compatibili con questo principio.
 | comando | canonico qui | note |
 |---|---|---|
 | `merge` | ✅ 2026-09-16 | push del default e cleanup del branch rimossi |
-| `release` | — | 3 copie identiche da eliminare, 2 varianti di repo da decidere |
+| `release` | ✅ 2026-09-16 | assorbe le 2 varianti di repo; ora pusha e pulisce i branch |
 | `deferred` | — | divergenza sostanziale atala ↔ lifehacker |
 | `squash-story` | — | divergenza sostanziale atala ↔ lifehacker |
 | `ui-check` | — | orfano (solo atala): decidere se sale |
@@ -112,7 +112,66 @@ In `squash-story` il riferimento **non** è conforme, in entrambe le varianti:
 
 Entrambe hardcodano anche il prefisso di team `RAW-xx`, che è di Linear e di quei due repo.
 
+### 2026-09-16 — `release`: le tre varianti convergono, la generica le assorbe
+
+Scheletro **identico** nelle tre: precondizioni → diff dall'ultimo tag → bump SemVer → changelog →
+dry-run come gate → applica → pulizia. I tre comandi git del passo "leggi cosa è cambiato" sono
+letteralmente gli stessi tre, nello stesso ordine, in tutti e tre i file.
+
+Le differenze stanno in due punti soli — **quanti changelog** (1 tecnico in lifehacker, 2 in
+trasformazione, rilevato nella generica) e **qual è il comando che applica** — cioè esattamente le
+due cose che il §0 della generica sa già scoprire da sé. Tutto il resto sono **fatti del repo**, non
+della skill, e vanno nel `CLAUDE.md` del repo: il deploy Vercel sul push, la shape `ReleaseContent`
+di `scripts/release-apply.ts`, i report di review tracciati in lifehacker e in `.gitignore` in
+trasformazione (precondizioni opposte, e giustamente opposte).
+
+Drift nell'altra direzione, che la consolidazione **recupera**: le due specifiche avevano perso il
+§7 sulla release a metà (*"un tag doppio è più fastidioso di una release rimandata di un'ora"*) e
+l'avviso sui changelog multipli — che manca proprio a trasformazione, che di changelog ne ha due.
+
+### 2026-09-16 — `release` è il punto dove il lavoro diventa pubblico
+
+Conseguenza diretta della decisione su `merge`: se `merge` non pusha, il default locale accumula
+merge e qualcuno deve pubblicarli. È `release`.
+
+- La precondizione "`main` allineato col remoto" era sbagliata nel nuovo assetto: il `pull --ff-only`
+  serve a **prendere**, non a pretendere allineamento. Il default locale avanti è la norma, ed è il
+  materiale del rilascio.
+- Il §2 mostra anche `git log origin/<default>..HEAD`, **con i nomi dei branch**: al passo 5 l'utente
+  deve sapere che sta pubblicando lavoro finora esistito solo sulla sua macchina.
+
+### 2026-09-16 — pulizia dei branch morti dentro `release`, dopo il tag
+
+Nuovo §8. Sta **dopo** il passo 6 di proposito: un branch mergiato prima del rilascio è dentro il
+rilascio appena fatto, quindi pushato e taggato — cancellarlo non perde niente. Cancellarlo prima
+vorrebbe dire cancellarlo mentre esiste solo in locale. Per lo stesso motivo il §7 dice che su una
+release a metà il §8 **non si fa**.
+
+Due categorie tenute rigidamente separate:
+
+- **mergiati** — sicuri, `git branch -d` (mai `-D`: il rifiuto di `-d` è la rete di sicurezza), una
+  conferma sola per tutto il gruppo;
+- **non mergiati fermi da oltre 60 giorni** — non sicuri, `-D`, conferma **branch per branch**, con
+  data, numero di commit unici e SHA stampato prima di cancellare.
+
+Soglia **60 giorni** e ambito **locale + remoto con conferme separate** (decisi il 2026-09-16). Il
+remoto ha una conferma sua perché il reflog non lo copre: un branch cancellato su `origin` si
+recupera solo se qualcuno ha ancora lo SHA.
+
+Mai toccati: default, branch corrente, branch con PR aperta, branch in un worktree, branch di
+manutenzione (`release/*`, `hotfix/*`, `v1.x`) — vecchi per costruzione, non morti.
+
+### 2026-09-16 — `release`: nessun riferimento a Linear
+
+Zero occorrenze di Linear o Jira in tutte e tre le varianti. L'unica occorrenza di "ticket" era la
+riga *"non tocca branch, non fa merge, non chiude ticket"*, riscritta in *"non fa merge, non chiude
+ticket"* perché da adesso i branch li tocca. **Conforme.**
+
 ## Aperti
 
 - Il messaggio di chiusura nomina ancora il push come passo successivo dell'utente (non lo
   esegue). Se "levare il push" voleva dire non menzionarlo affatto, va tolto anche di lì.
+- Con `merge` che non pusha e `release` che pusha, il lavoro mergiato ma non rilasciato resta sulla
+  macchina a tempo indefinito. Va bene se ogni merge finisce in un rilascio ragionevolmente vicino;
+  se invece capita di accumulare merge per settimane senza rilasciare, serve un modo per pubblicare
+  senza rilasciare — oggi non c'è.
