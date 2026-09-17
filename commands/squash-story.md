@@ -114,42 +114,52 @@ Il range va dal commit **prima** del primo del branch fino a `HEAD`:
 git merge-base "$DEF" "$BR"      # = <base-sha>
 ```
 
-### Il criterio: si raggruppa per APPARTENENZA, non per quando è stato scritto
+### Il criterio: la story da una parte, i fix dall'altra
 
-**Assegna ogni commit all'unità di lavoro a cui appartiene**, e collassa ogni gruppo in **un commit
-solo**. Ci finisce dentro tutto: il `feat`, i `fix … (iter N)` della pipeline, i fix scritti a mano
-dopo la review, l'impalcatura (`start pipeline`, `create story context`, `pipeline report`,
-`finalize`, `record state`, i flip di stato).
+Due gruppi, e **non si mescolano mai**.
 
-**Il momento in cui un commit è nato non conta.** Un fix di review della story 4.2 sta nel commit
-della story 4.2, che l'abbia scritto la pipeline o una persona tre giorni dopo. Quello che conta è
-**a cosa appartiene**, non chi l'ha battuto a tastiera.
+**1. La story.** Il `feat`, i `fix … (iter N)` prodotti dalla pipeline *dentro* il ciclo, i `test`
+generati con loro, e tutta l'impalcatura (`start pipeline`, `create story context`,
+`pipeline report`, `finalize`, `record state`, i flip di stato): **tutto in un commit solo**.
+Nessuno ha mai eseguito quel lavoro senza di loro — separati sono archeologia del processo, non
+storia del prodotto.
 
-Su un branch di cinque storie il risultato sono cinque commit, più **al massimo uno** in coda per
-gli artefatti che non appartengono a nessuna story in particolare (retrospettiva, contesto di
-progetto, config di fine corsa).
+Su un branch di cinque storie sono cinque commit, più **al massimo uno** in coda per gli artefatti
+che non appartengono a nessuna story in particolare (retrospettiva, contesto di progetto, config di
+fine corsa).
 
 **Le decisioni prese in review vanno assorbite nel body del commit** — cosa ha deciso l'umano, quali
 deviazioni, quali deroghe. È l'unica cosa che il collasso perderebbe davvero.
 
-**Un commit per unità di lavoro è il default, non un dogma.** Se dentro una story convivono due
-lavori che davvero non si parlano, due commit sono legittimi: dillo e spiega perché. Ma non usare
-l'eccezione per evitare di decidere — nel dubbio, uno.
+**Un commit per story è il default, non un dogma.** Se dentro una story convivono due lavori che
+davvero non si parlano, due commit sono legittimi: dillo e spiega perché. Ma non usare l'eccezione
+per evitare di decidere — nel dubbio, uno.
 
-### L'unica cosa che non si fonde mai: ciò che appartiene a un'altra unità di lavoro
+**2. I fix scritti dopo la chiusura.** Review successive, follow-up, lavoro emerso da una PR già
+aperta: **restano fuori dai commit di story, sempre.** Si collassano **fra loro**, non dentro il
+`feat`.
 
-⚠️ **Regola dura.** Il range arriva "fino a `HEAD`", quindi i commit di *altre* storie ci finiscono
-dentro per costruzione ed è facile assorbirli senza accorgersene. Ma un fix che tocca il codice di
-**un'altra epic**, sepolto dentro il `feat` di questa, è una history che mente — e mente proprio nel
-punto in cui qualcuno la interrogherà (`git log` su quel file).
+⚠️ **È una regola dura, non una preferenza.** Il commit di story dice *cosa è stato costruito*; i
+commit di fix dicono *cosa la review ha trovato*. Sono due informazioni diverse, e fonderle cancella
+la seconda — che fra sei mesi è spesso la più interessante delle due.
 
-**Come si riconoscono.** Due segnali, utili ma non decisivi: non hanno `(iter N)` nel subject, e
-seguono già le convenzioni del repo (li ha scritti una persona, non il template della pipeline).
-Sono **indizi che quel commit va guardato**, non la regola: un fix scritto a mano che ricade tutto
-sulla story corrente appartiene alla story corrente, e ci si fonde.
+**Dieci commit di fix diventano uno o due.** Mai dieci, mai una collana:
 
-Se i commit fuori-perimetro sono più di due, **collassali fra loro** in uno:
-`fix(<area>): review integrata di <origine> (<provenienza>)`. Pochi commit, mai una collana.
+- **uno** è il default;
+- **due** quando i fix si dividono nettamente per area o per natura — correzioni di sicurezza da una
+  parte e ritocchi di interfaccia dall'altra sono due commit che dicono due cose; cinque fix sparsi
+  sullo stesso modulo sono uno.
+
+Messaggio: `fix(<area>): review integrata di <origine> (<provenienza>)`.
+
+**Come si riconoscono.** Non hanno `(iter N)` nel subject, e seguono già le convenzioni del repo —
+li ha scritti una persona, non il template della pipeline.
+
+⚠️ **Un fix che tocca il codice di un'ALTRA unità di lavoro va in un commit suo**, con la sua
+provenienza, e non finisce nel mucchio dei fix di questa. Il range arriva "fino a `HEAD`", quindi ci
+casca dentro per costruzione ed è facile assorbirlo senza accorgersene: un fix su `core/errors.ts`
+sepolto fra i fix dell'epic 6 è una history che mente, e mente proprio nel punto in cui qualcuno la
+interrogherà (`git log` su quel file).
 
 ### Provenienza: la più specifica che esiste — e se non esiste, si omette
 

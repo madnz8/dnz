@@ -23,8 +23,8 @@ niente operazioni dalla UI di GitHub. La PR serve per la review e la preview; il
 Due cose da sapere prima di toccare qualcosa. **Rileva, non presumere.**
 
 ```bash
-git symbolic-ref --short refs/remotes/origin/HEAD    # branch di default: non darlo per 'main'
-git branch --show-current                            # il branch da chiudere
+DEF=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's|^origin/||')   # non darlo per 'main'
+git branch --show-current                                                       # il branch da chiudere
 ```
 
 - **Convenzioni dei messaggi** — leggi il `CLAUDE.md` del repo (o `AGENTS.md`/`CONTRIBUTING.md`). Se
@@ -36,9 +36,15 @@ git branch --show-current                            # il branch da chiudere
 ## 1 — Precondizioni
 
 - **Review della PR conclusa.**
-- **History già ripulita**, se serviva (`/dnz:squash-story`): dopo il merge il branch è ancora lì,
-  ma il suo contenuto è già atterrato nel default — riscriverne la history non cambia più quello
-  che la history del progetto racconta.
+- **History già ripulita**, se serviva. Non darlo per fatto: **contala**.
+  ```bash
+  git log --oneline "$DEF..$(git branch --show-current)" | wc -l
+  git log --oneline "$DEF..$(git branch --show-current)" | grep -cE '\(iter [0-9]+\)|start .*pipeline'
+  ```
+  Oltre una manciata di commit, o con anche un solo subject di impalcatura, **proponi
+  `/dnz:squash-story` e fermati**: dopo il merge il branch è ancora lì, ma il suo contenuto è già
+  atterrato nel default — riscriverne la history non cambia più quello che la history del progetto
+  racconta. Questa è l'ultima occasione.
 - Working tree pulito, branch già pushato.
 - Nessun artefatto locale finito per sbaglio nei commit (report di review, file temporanei): se
   `git status --short` ne mostra, vanno rimossi o messi in `.gitignore` **prima** del merge, non
