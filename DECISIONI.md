@@ -40,7 +40,7 @@ sono compatibili con questo principio.
 | `merge` | ✅ 2026-09-16 | push del default e cleanup del branch rimossi |
 | `release` | ✅ 2026-09-16 | assorbe le 2 varianti; pusha, pulisce i branch, §4b sulle Novità |
 | `deferred` | — | divergenza sostanziale atala ↔ lifehacker |
-| `squash-story` | — | divergenza sostanziale atala ↔ lifehacker |
+| `squash-story` | ✅ 2026-09-16 | criterio unificato sull'appartenenza; provenienza opzionale |
 | `ui-check` | — | orfano (solo atala): decidere se sale |
 | `audit` | — | orfano (solo lifehacker): decidere se sale |
 | `journal` | — | solo livello utente, nessun repo lo cita |
@@ -189,6 +189,55 @@ cambiato niente; un bugfix entra solo se l'utente aveva visto il problema; categ
 voci — così l'elenco non ha buchi. Verificato che non serve toccare `changelog.ts`: l'API di atala
 valida `title: z.string()`, e la stringa vuota passa. Resta da vedere come il popup renderizza un
 titolo vuoto: è lavoro della sessione di atala.
+
+### 2026-09-16 — `squash-story`: le due varianti erano in conflitto, non solo adattate
+
+A differenza di `release`, qui c'è un **conflitto di regola**, non un adattamento:
+
+- **atala** raggruppa **per appartenenza**: un fix di review della story 4.2 va nel commit della
+  story 4.2, *"che l'abbia scritto la pipeline o una persona tre giorni dopo"*;
+- **lifehacker** ha una regola dura opposta: *"i fix scritti a mano DOPO la chiusura non si fondono
+  mai"*, perché **spesso** toccano un'altra epica.
+
+Vince **l'appartenenza**. La regola di lifehacker è una *proxy* di quella di atala — "scritto a mano
+dopo" ≈ "probabilmente appartiene ad altro" — e la proxy sbaglia proprio nel caso che atala
+prevede: un fix a mano che ricade tutto sulla story corrente. I due segnali di lifehacker (assenza
+di `(iter N)` nel subject, convenzioni del repo già rispettate) restano, **declassati a euristica di
+riconoscimento**: indizi che quel commit va guardato, non la regola che decide.
+
+**Tenuto da lifehacker** perché più preciso: la misura dei commenti di riga
+(`gh api …/pulls/<N>/comments --jq 'length'`) con la distinzione fra commenti di riga e commenti a
+livello di PR — solo i primi sono hard-stop; l'avvertenza sulla divergenza story/epica dopo un
+`finalize` caveated; la nota GateGuard completa (8 blocchi misurati in una sessione); l'esclusione
+dei test che scrivono su servizi veri, generalizzata da `test:rls`.
+
+**Tenuto da atala:** lo skip esplicito del passo 5 quando non ci sono file di story, la derivazione
+di `{key}` dal nome del branch, e la formulazione generale dell'intro.
+
+**Generalizzato:** nuovo §0 "Orientati" come in `merge` e `release` (branch di default, comando di
+verifica, tracker, presenza di una pipeline); `main` non più hardcoded nel `merge-base`;
+`madnz8/lifehacker` sostituito da `gh repo view --json nameWithOwner`.
+
+Verificato oggi: `gh 2.46.0` è ancora la versione in uso, quindi l'avvertenza su `gh pr edit` regge.
+
+### 2026-09-16 — `squash-story`: la provenienza diventa opzionale (fix Linear)
+
+Era il punto non conforme al principio trasversale. atala si **fermava e chiedeva** quando non
+trovava un ticket Linear; lifehacker aveva già un terzo livello `(epic N)` ma nessun ramo per
+"niente di niente".
+
+Ora i livelli sono quattro, in ordine di specificità: `(Story N.M)` → `(<TICKET>)` dal tracker
+rilevato al passo 0, qualunque esso sia → `(epic N)` → **niente, e si omette la parentesi**. Con il
+divieto esplicito di fermarsi a chiedere e di inventare: *"un messaggio senza parentesi è corretto;
+una provenienza inventata è un puntatore falso che qualcuno seguirà"*. Stessa forma della regola già
+presente in `merge` per il ticket.
+
+### 2026-09-16 — scoperta in corso d'opera: GateGuard legge dentro gli heredoc
+
+Scrivere questo file con `cat > file <<EOF` è stato bloccato due volte: il contenuto documenta
+comandi distruttivi (`rm -f`, cancellazione di branch) e il gate li intercetta **come testo**, pur
+non eseguendoli. La via che passa è il tool di scrittura file. Annotato nella nota GateGuard del §5,
+perché capita esattamente a chi sta scrivendo procedure come questa.
 
 ## Aperti
 
