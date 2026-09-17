@@ -92,10 +92,48 @@ dettaglio dell'ultima voce.
 Dimenticarne uno non fa fallire niente e non lo nota nessuno — fino al rilascio dopo, quando manca
 un pezzo di storia che ormai va ricostruito.
 
-Il changelog racconta **cosa è cambiato per chi lo usa**, non l'elenco dei commit.
-
 Se lo strumento vuole un file di input, salvalo **fuori dal repo** (lo scratchpad di sessione), così
 non sporchi il working tree che il passo 1 ti ha chiesto di tenere pulito.
+
+### 4a — Il changelog tecnico
+
+Racconta **cosa è cambiato**, non l'elenco dei commit. Il lettore è chi lavora al repo: la causa di
+un bug, il nome del modulo e il numero della issue qui ci stanno.
+
+### 4b — Il changelog "Novità", se il repo ne ha uno
+
+Lettore diverso, regole diverse. Non è il changelog tecnico tradotto in parole semplici: è un
+**annuncio**, e un annuncio è corto.
+
+**Una voce = una riga.** Massimo ~20 parole. Dice **cosa puoi fare adesso** oppure **cosa non ti
+succede più**. Mai il perché, mai il come, mai di chi era la colpa.
+
+> ✗ *"L'automatismo delle ricevute non funzionava: era un pezzo di libreria che non era stato
+> copiato sul server. Ora funziona."*
+> ✓ *"Le ricevute della Questura arrivano da sole ogni mattina: non devi più avviarle a mano."*
+
+**Non entra:**
+
+- ciò che è **spento o non ancora attivo** — si annuncia quando si accende, non prima;
+- la **causa tecnica** di un bug;
+- le **istruzioni di supporto** (svuotare la cache, forzare il ricaricamento): sono assistenza;
+- il **lavoro interno** — refactoring, spostamenti di codice, test, dipendenze;
+- qualunque frase che dica **che non è cambiato niente**. Una voce che spiega di non essere una
+  novità è il segnale che quella voce non andava scritta.
+
+**Un bugfix entra solo se l'utente aveva visto il problema.** Lo stesso ticket che riappariva
+confermato due volte: sì, lo vedeva. Un timeout di un controllo notturno: no.
+
+**Cosa succede se non resta niente.** È l'esito normale di molte release, non un'anomalia. La
+versione **compare lo stesso** nell'elenco — numero e data, così la storia non ha buchi — ma
+**senza titolo e senza voci**. Non inventare un titolo per riempire lo spazio, e soprattutto non
+scriverci che non è cambiato niente.
+
+**Il titolo della versione**, quando c'è, è una frase che dice cosa adesso funziona
+(*"Le ricevute della Questura arrivano da sole, ogni mattina"*), non un riassunto del diff.
+
+**Le categorie sono tre: `Nuovo`, `Migliorato`, `Corretto`.** Se nel file ne trovi altre, è drift
+accumulato: non aggiungerne, usa queste tre.
 
 ## 5 — Anteprima, poi chiedi
 

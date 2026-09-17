@@ -38,7 +38,7 @@ sono compatibili con questo principio.
 | comando | canonico qui | note |
 |---|---|---|
 | `merge` | ✅ 2026-09-16 | push del default e cleanup del branch rimossi |
-| `release` | ✅ 2026-09-16 | assorbe le 2 varianti di repo; ora pusha e pulisce i branch |
+| `release` | ✅ 2026-09-16 | assorbe le 2 varianti; pusha, pulisce i branch, §4b sulle Novità |
 | `deferred` | — | divergenza sostanziale atala ↔ lifehacker |
 | `squash-story` | — | divergenza sostanziale atala ↔ lifehacker |
 | `ui-check` | — | orfano (solo atala): decidere se sale |
@@ -166,6 +166,29 @@ manutenzione (`release/*`, `hotfix/*`, `v1.x`) — vecchi per costruzione, non m
 Zero occorrenze di Linear o Jira in tutte e tre le varianti. L'unica occorrenza di "ticket" era la
 riga *"non tocca branch, non fa merge, non chiude ticket"*, riscritta in *"non fa merge, non chiude
 ticket"* perché da adesso i branch li tocca. **Conforme.**
+
+### 2026-09-16 — il changelog "Novità" ha regole sue, e può restare vuoto
+
+Misurato su `docs/changelog/changelog.json` di atala: 150 voci, **media 41 parole a voce**, mediana
+32, massimo 136, il **30% sopra le 50 parole**. Una voce di annuncio dovrebbe essere una riga.
+
+La causa non sono le parole: quel file fa **quattro lavori insieme** — annuncio, spiegazione
+tecnica (*"era un pezzo di libreria non copiato sul server"*), nota di supporto (*"basta un
+Ctrl+Shift+R"*) e giustificazione del lavoro svolto (v0.49.0 si intitola *"Nessun cambiamento nel
+portale"*). Solo il primo è una novità. Caso limite: v0.50.0 annuncia in 100 parole un automatismo
+**spento**, v0.50.1 dice che non funzionava, v0.51.0 che è acceso — tre versioni della stessa cosa
+prima che esista.
+
+Regole scritte nel §4b: una riga, ~20 parole, cosa puoi fare adesso o cosa non ti succede più;
+fuori lo spento, la causa tecnica, il supporto, il lavoro interno e le frasi che dicono che non è
+cambiato niente; un bugfix entra solo se l'utente aveva visto il problema; categorie ridotte a tre
+(`Nuovo`/`Migliorato`/`Corretto`, oggi sono dieci con `Aggiunto`/`Nuovo` e
+`Miglioramento`/`Migliorato` doppioni).
+
+**Quando non resta niente, la versione compare lo stesso** — numero e data, senza titolo e senza
+voci — così l'elenco non ha buchi. Verificato che non serve toccare `changelog.ts`: l'API di atala
+valida `title: z.string()`, e la stringa vuota passa. Resta da vedere come il popup renderizza un
+titolo vuoto: è lavoro della sessione di atala.
 
 ## Aperti
 
