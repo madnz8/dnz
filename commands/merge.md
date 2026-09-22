@@ -32,6 +32,9 @@ git branch --show-current                                                       
 - **Ticket** — c'è un tracker (Linear, Jira, GitHub Issues)? Il ticket si deduce dal nome del
   branch, dai commit o dal corpo della PR? Se non lo trovi, il passo 3 semplicemente **non si fa**:
   non si inventa un ticket per avere qualcosa da chiudere.
+- **Il nome del branch** finisce nel messaggio del passo 2, e da lì nella history permanente del
+  branch di default. Se è muto o fuorviante, **questo è l'ultimo momento per cambiarlo** — ma non si
+  rinomina qui: la procedura, con l'avvertenza sulle PR aperte, sta in `/dnz:squash-story`.
 
 ## 1 — Precondizioni
 

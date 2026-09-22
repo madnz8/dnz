@@ -239,6 +239,49 @@ comandi distruttivi (`rm -f`, cancellazione di branch) e il gate li intercetta *
 non eseguendoli. La via che passa è il tool di scrittura file. Annotato nella nota GateGuard del §5,
 perché capita esattamente a chi sta scrivendo procedure come questa.
 
+### 2026-09-22 — i fix di review restano separati, e la ragione non è quella che sembrava
+
+Correzione della decisione del 2026-09-16: vince la regola di **lifehacker**, non quella di atala. I
+fix scritti dopo la chiusura non si fondono nel `feat` — si collassano **fra loro**, in uno o due
+commit: uno di default, due quando si dividono nettamente per area o natura.
+
+La ragione decisiva non è "la review è la cosa più interessante", ma un'asimmetria: **la vista a
+grana grossa esiste già gratis, quella fine no.** `/dnz:merge` fa `git merge --no-ff`, quindi
+`git log --first-parent` sul default mostra già un nodo per branch, fix inclusi e invisibili — e il
+revert avviene sul merge commit (`git revert -m 1`), non sui singoli. Tenere separati non costa
+niente nella vista di sintesi, mentre fondere distrugge per sempre l'altra. **Fondere dopo si può,
+sfondere mai.**
+
+Prezzo accettato consapevolmente: `git blame` su una riga corretta in review atterra sul commit di
+fix, non sul `feat`. Mitigato dalla provenienza nel messaggio, che diventa funzionale e non
+decorativa.
+
+### 2026-09-22 — `merge` e `squash-story` restano due skill, con un rilevamento
+
+Non si fondono. `squash-story` è l'operazione pericolosa (riscrive la history, force-push, gate, due
+rebase), `merge` no: unirle darebbe una skill di 13 passi in cui la parte rischiosa non si può né
+saltare né lanciare da sola, e un conflitto a metà rebase lascerebbe un merge in sospeso. In più
+`squash-story` gira legittimamente **a metà branch**, story per story su un epic lungo — caso che
+una skill unica perderebbe, ed è quello in cui vale di più.
+
+Il costo della separazione è ricordarsi di lanciarla, e si paga con un controllo: `merge` §1 ora
+**conta** i commit e cerca i subject di impalcatura invece di dare per fatta la pulizia, e se trova
+roba propone `/dnz:squash-story` e si ferma. Col nuovo `merge` quella è davvero l'ultima occasione.
+
+### 2026-09-22 — il rename del branch entra in `squash-story`
+
+Il nome finisce nella history permanente: `merge branch '<nome>'` nel commit di merge, sul default.
+La sua scadenza è quindi il merge, e la sede naturale è la skill che gira subito prima ed è già
+quella che rende leggibile la history. In `merge` resta solo un rimando.
+
+Passo **opzionale**, da proporre solo se il nome è muto o fuorviante, e da eseguire **prima del
+backup** del passo 1, così il branch di backup nasce già col nome nuovo.
+
+⚠️ Con una PR aperta non si rinomina con git: rinominare in locale, togliere il vecchio branch dal
+remoto e pushare il nuovo **chiude la PR**. Si usa l'API di rename di GitHub, che ritargheta le PR
+aperte. **Non misurato** — a differenza dell'avvertenza su `gh pr edit`, è documentazione GitHub, e
+nella skill è marcato come da verificare alla prima esecuzione.
+
 ## Aperti
 
 - Il messaggio di chiusura nomina ancora il push come passo successivo dell'utente (non lo

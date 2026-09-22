@@ -90,6 +90,38 @@ gh repo view --json nameWithOwner -q .nameWithOwner                             
 > conversazione della PR, staccati dal codice) e vai. È il costo normale di questa operazione, non
 > un incidente — a review conclusa quei commenti hanno già dato quello che dovevano dare.
 
+## Il nome del branch, finché si è in tempo
+
+Il nome finisce **dentro la history permanente**: `/dnz:merge` scrive `merge branch '<nome>'` nel
+commit di merge, sul branch di default. Dopo, è lì per sempre. Questo è l'ultimo momento comodo per
+cambiarlo.
+
+**Passo opzionale.** Se il nome descrive già il lavoro, salta senza dire niente. Proponilo solo se
+il nome è muto (`fix-2`, `test`, `wip`, `patch-1`), se è fuorviante, o se il lavoro ha cambiato
+strada rispetto a quando il branch è nato. Un nome funzionale dice **l'area e la cosa fatta**, con
+lo stesso vocabolario degli scope dei commit: `feat/alloggiati-ricevute`, non `alloggiati2`.
+
+⚠️ **Se c'è una PR aperta, non rinominare con git.** Rinominare in locale, cancellare il vecchio
+branch sul remoto e pushare il nuovo **chiude la PR**: GitHub la considera orfana, e review e
+conversazione restano attaccate a un branch che non esiste più. La via che la preserva è l'API di
+rename, che rinomina anche sul remoto e ritarghetta le PR aperte:
+
+```bash
+gh api --method POST repos/<owner>/<repo>/branches/<vecchio>/rename -f new_name=<nuovo>
+git fetch origin && git checkout <nuovo>     # riallinea il locale
+BR=<nuovo>
+```
+
+> **Da verificare alla prima esecuzione.** A differenza dell'avvertenza su `gh pr edit` al passo 7,
+> questa non è misurata: che l'API ritargheti le PR aperte è documentato da GitHub, non provato qui.
+> Controlla che la PR sia ancora aperta e punti al nome nuovo prima di proseguire.
+
+Senza PR aperta basta git: rinomina locale, push del nuovo con `-u`, e via il vecchio dal remoto se
+c'era già arrivato.
+
+**Rinomina prima del backup del passo 1**, così il branch di backup nasce già con il nome nuovo e
+non ti resta un `backup/pre-squash-<vecchio-nome>` a raccontare un'altra storia.
+
 ## 1 — Backup (non negoziabile, ma effimero)
 
 ```bash
@@ -142,6 +174,17 @@ aperta: **restano fuori dai commit di story, sempre.** Si collassano **fra loro*
 ⚠️ **È una regola dura, non una preferenza.** Il commit di story dice *cosa è stato costruito*; i
 commit di fix dicono *cosa la review ha trovato*. Sono due informazioni diverse, e fonderle cancella
 la seconda — che fra sei mesi è spesso la più interessante delle due.
+
+**E non costa niente.** La vista "un nodo per branch" esiste già a monte: `/dnz:merge` fa
+`git merge --no-ff` apposta, quindi `git log --first-parent` sul branch di default mostra un solo
+commit per lavoro, fix inclusi e invisibili. La granularità interna la paghi solo quando scendi a
+guardare — cioè quando la vuoi. Per la stessa ragione anche il revert resta semplice: si torna
+indietro dal merge commit (`git revert -m 1 <merge>`), non dai singoli commit.
+
+Il prezzo vero è un altro, e va accettato consapevolmente: `git blame` su una riga corretta in
+review atterra sul commit di fix, non sul `feat` che spiega la feature. Per questo la provenienza
+nel messaggio non è decorazione — `fix(<area>): review integrata della Story 4.2` è la riga che dice
+a chi fa blame dove andare a leggere.
 
 **Dieci commit di fix diventano uno o due.** Mai dieci, mai una collana:
 
