@@ -41,9 +41,9 @@ sono compatibili con questo principio.
 | `release` | ✅ 2026-09-16 | assorbe le 2 varianti; pusha, pulisce i branch, §4b sulle Novità |
 | `deferred` | ✅ 2026-09-22 | convergono; unica skill non universale — richiede un registro su disco |
 | `squash-story` | ✅ 2026-09-16 | criterio unificato sull'appartenenza; provenienza opzionale |
-| `ui-check` | — | orfano (solo atala): decidere se sale |
-| `audit` | — | orfano (solo lifehacker): decidere se sale |
-| `journal` | — | solo livello utente, nessun repo lo cita |
+| `ui-check` | ✅ 2026-09-22 | sale; il §1 era conoscenza di macchina, non di repo |
+| `audit` | ✅ 2026-09-22 | sale; metodologia separata dai fatti di lifehacker |
+| `journal` | ✅ 2026-09-22 | sale invariato; la più generale delle sette |
 
 ## Decisioni
 
@@ -309,6 +309,51 @@ scritti dentro i comandi. Numerazione dei passi allineata alle altre skill (§0 
 
 Zero occorrenze di Linear, Jira o ticket in entrambe le varianti. La skill lavora su voci di
 registro con id propri, non su issue di un tracker. **Conforme, nessuna modifica.**
+
+### 2026-09-22 — i tre orfani salgono tutti, per ragioni diverse
+
+**`journal`** sale invariato: è la più generale delle sette e l'unica che serve anche **fuori** da un
+repo di codice. Unica aggiunta, un riquadro sul rapporto con la memoria dell'agente — si somigliano e
+non sono la stessa cosa: la memoria tiene fatti atomici e durevoli validi per ogni progetto, il
+diario tiene la cronologia di questo. Una decisione superata esce dalla memoria e **resta** nel
+diario, con la data.
+
+**`ui-check`** sale, e guadagna più di tutte, perché **il suo §1 non era conoscenza di atala: era
+conoscenza di questa macchina.** Chromium installato via Playwright, wrapper in `~/.local/bin/`,
+symlink su `/opt/google/chrome/chrome`, e il fatto che `chmod +x` e `sudo ln` vengano bloccati
+quando li esegue l'agente e vadano passati all'utente col prefisso `!`. Setup fatto una volta su
+rings il 2026-08-26 e sepolto nel repo di un progetto, dove nessun altro repo l'avrebbe mai trovato.
+Generale anche il §5: mai allegare binari a un commento PR via `gh` (l'endpoint non esiste), mai
+pushare screenshot in un branch vero per ottenere un link raw. Spostati nel §0 i fatti di atala:
+porta 3001, `AUTH_URL` hardcoded sulla 3000 che manda l'autenticazione in loop di redirect,
+dev-login, regole sui dati dei meditatori — generalizzati come "la variabile che dichiara l'URL
+dell'app", che è la trappola vera e vale per qualunque framework.
+
+**`audit`** sale col lavoro più grosso: scheletro generale (delta-first, baseline misurata invece che
+assunta, finding precedenti ri-verificati uno per uno, sezione **FALSI ALLARMI** — *"è la sezione che
+ripaga il costo dell'audit"*, divieto di refactor durante l'audit) separato dalla carne di lifehacker
+(`npm run typecheck`, l'endpoint health, `zod/v4`, RLS/GUC/consent, `saas-readiness-ledger.md`).
+L'argomento decisivo lo diceva il file stesso: *"In atala-portal non esiste un comando
+equivalente"* — eppure atala ha già 15+ report in `.claude/reviews/`, quindi l'audit lo fa a mano,
+senza metodo scritto.
+
+### 2026-09-22 — i tre orfani: nessun riferimento a Linear
+
+Zero occorrenze di Linear, Jira, ticket o issue in tutti e tre i file. **Conformi.** Con questo
+l'audit Linear copre tutte e sette le skill: il problema era solo in `squash-story`, ed è risolto.
+
+### 2026-09-22 — consolidamento completo: come si divide la collezione
+
+Sette skill, tre fasce per presupposti:
+
+- **universali (4)** — `merge`, `release`, `squash-story`, `journal`: funzionano in qualunque repo, e
+  `journal` anche fuori da un repo;
+- **richiedono una pipeline con registro su disco (2)** — `deferred`, `audit`: oggi 2 repo su 7;
+- **richiede un'app con interfaccia (1)** — `ui-check`.
+
+Questo risolve anche il dubbio sul contenitore: **una sede unica va bene per tutte**, perché le tre
+della seconda e terza fascia si fermano da sole quando i presupposti mancano. Non serve installare
+sottoinsiemi diversi per repo diversi.
 
 ## Aperti
 
