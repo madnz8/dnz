@@ -39,7 +39,7 @@ sono compatibili con questo principio.
 |---|---|---|
 | `merge` | ✅ 2026-09-16 | push del default e cleanup del branch rimossi |
 | `release` | ✅ 2026-09-16 | assorbe le 2 varianti; pusha, pulisce i branch, §4b sulle Novità |
-| `deferred` | — | divergenza sostanziale atala ↔ lifehacker |
+| `deferred` | ✅ 2026-09-22 | convergono; unica skill non universale — richiede un registro su disco |
 | `squash-story` | ✅ 2026-09-16 | criterio unificato sull'appartenenza; provenienza opzionale |
 | `ui-check` | — | orfano (solo atala): decidere se sale |
 | `audit` | — | orfano (solo lifehacker): decidere se sale |
@@ -281,6 +281,34 @@ backup** del passo 1, così il branch di backup nasce già col nome nuovo.
 remoto e pushare il nuovo **chiude la PR**. Si usa l'API di rename di GitHub, che ritargheta le PR
 aperte. **Non misurato** — a differenza dell'avvertenza su `gh pr edit`, è documentazione GitHub, e
 nella skill è marcato come da verificare alla prima esecuzione.
+
+### 2026-09-22 — `deferred`: convergono, ma è l'unica skill non universale
+
+lifehacker è un adattamento dichiarato di atala, con la tabella dei delta in fondo: procedura,
+regole ferree e trappole sono le stesse parola per parola. Le differenze sono tutte **fatti del
+repo** — marcatore legacy `[RISOLTO …]` presente solo in lifehacker, consegna (commit diretto in
+atala, branch+PR obbligatori in lifehacker), regola sui dati sensibili (PII con hook vs
+log-hygiene), comando di non-regressione, famiglie di non-lavoro ricorrenti. Tutte rilevabili, e
+infatti il nuovo §0 le rileva.
+
+**Recuperato contenuto che lifehacker aveva compresso via:** le tre famiglie di lavori da scartare
+nel piano (refactor a conteggio, lavoro da accorpare altrove, pulizia senza destinatario), il
+difetto storico `"moved": 0` — *"un passo che tace è indistinguibile da un passo che non gira"* — e
+il caso reale del tool che vorrebbe archiviare una voce con la decisione chiusa ma la verifica no.
+
+**La differenza di natura rispetto alle altre tre.** `merge`, `release` e `squash-story` sono
+operazioni git: esistono ovunque. `deferred` fa triage di un **artefatto di auto-bmad**: in un repo
+senza `_bmad-output/` non ha niente da fare. Consolidarla ha senso lo stesso (un file invece di due
+che divergono), ma va scritto in faccia — c'è un riquadro in cima che lo dice, e le precondizioni la
+fermano da sole. Riguarda 2 repo su 7, non tutti.
+
+Generalizzati anche i percorsi: registro, archivio e script si rilevano al passo 0 invece di essere
+scritti dentro i comandi. Numerazione dei passi allineata alle altre skill (§0 Orientati, poi 1-7).
+
+### 2026-09-22 — `deferred`: nessun riferimento a Linear
+
+Zero occorrenze di Linear, Jira o ticket in entrambe le varianti. La skill lavora su voci di
+registro con id propri, non su issue di un tracker. **Conforme, nessuna modifica.**
 
 ## Aperti
 
