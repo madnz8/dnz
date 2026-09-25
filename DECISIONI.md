@@ -414,7 +414,41 @@ Quello che si fa: `concurrency: cancel-in-progress` per non pagarlo due volte, e
 **ridondante per costruzione** — il gate ha appena dimostrato che l'albero è identico, quindi un
 rosso lì è un flake, non una regressione.
 
+### 2026-09-25 — il contenitore è un plugin via marketplace, non copie nei repo
+
+Prima ho sbagliato strada e va scritto perché, così non ci si ricasca. Quando l'utente ha detto
+"le voglio sul progetto per usarle anche da Claude web", **ho dato per scontato che una sessione web
+non veda i plugin installati** — non l'ho verificato né chiesto — e ho riprogettato la distribuzione
+come copie generate nei repo da uno script di sync. Quella soluzione ha un difetto che l'ipotesi non
+vedeva: **non si installa su un'altra macchina.** Dipende da una cartella che esiste solo su rings.
+
+Il repo `dnz` è ora **esso stesso un marketplace**: `.claude-plugin/marketplace.json` più
+`.claude-plugin/plugin.json`, sullo schema del marketplace ECC già funzionante su questa macchina.
+Installazione su qualunque macchina:
+
+```
+/plugin marketplace add <owner>/dnz
+/plugin install dnz@dnz
+```
+
+I nomi dei comandi non cambiano — un plugin `dnz` con `commands/merge.md` dà `/dnz:merge`, identico
+a prima. Versione `1.0.0`, aggiornamenti con `/plugin update dnz`.
+
+`sync.sh` rimosso: resta nella history se dovesse servire. **Non si mantengono due canali di
+distribuzione in parallelo per coprire un dubbio** — è il modo più rapido per tornare ad avere due
+versioni che divergono, cioè il problema da cui siamo partiti.
+
+**Resta da verificare** se Claude web veda i plugin installati. Se non li vedesse, lì i comandi non
+comparirebbero e servirebbe un secondo canale — ma si prova prima di costruirlo.
+
+**Prerequisito non ancora fatto:** `~/workspace/dnz` non ha un remoto. Perché il marketplace sia
+raggiungibile da altre macchine il repo va pubblicato su GitHub (privato), ed è una decisione
+dell'utente.
+
 ## Aperti
 
 - Il rename via API di GitHub ritargheta davvero le PR aperte? Non più rilevante per `squash-story`
   (sezione rimossa), ma resta un fatto non verificato se dovesse servire altrove.
+- Claude web vede i plugin installati? Da provare. Se no, serve un secondo canale per le sessioni
+  web — ma non lo si costruisce prima di saperlo.
+- `~/workspace/dnz` non ha un remoto: senza pubblicarlo su GitHub il marketplace funziona solo qui.

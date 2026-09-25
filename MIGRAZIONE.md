@@ -4,35 +4,45 @@ Le sette skill `/dnz:*` sono state consolidate in `~/workspace/dnz/commands/` a 
 copie divergenti sparse su quattro repo e sul livello utente. Questo documento serve a portarle nei
 repo.
 
-## Perché i file restano nei repo
+## Come si installa
 
-Non è un ripiego: è il vincolo. **Una sessione di Claude web vede solo ciò che è committato nel
-repo.** Non vede `~/workspace/` né `~/.claude/` di rings, quindi un plugin con marketplace di tipo
-`directory` e un symlink sono entrambi fuori gioco — funzionerebbero solo da terminale su rings.
+Il repo `dnz` **è** un marketplace: `.claude-plugin/marketplace.json` lo dichiara, e
+`.claude-plugin/plugin.json` descrive il plugin. Una volta che il repo è su GitHub, su qualunque
+macchina:
 
-La differenza rispetto a prima è **come** i file ci arrivano: non più sette documenti scritti a mano
-in posti diversi che divergono, ma copie generate da una fonte sola con `./sync.sh`, con accanto un
-`FONTE.md` che dice a chiunque le apra di non modificarle lì.
+```
+/plugin marketplace add <owner>/dnz
+/plugin install dnz@dnz
+```
 
-## Cosa cambia in ogni repo
+I sette comandi compaiono come `/dnz:merge`, `/dnz:release` e così via — gli stessi nomi di prima,
+quindi niente da reimparare. Gli aggiornamenti si prendono con `/plugin update dnz`.
 
-`sync.sh` porta **tutti e sette** i comandi ovunque, anche quelli che quel repo non può usare:
-`deferred` e `audit` richiedono un registro dei rinvii su disco, `ui-check` un'app con interfaccia.
-Non è un problema — **si fermano da sole nelle precondizioni**, ed è il comportamento voluto: meglio
-una skill che dice "qui non ho niente da fare" di una skill che manca quando serve.
+**Perché il marketplace e non una copia nei repo.** Perché così si installa su qualunque macchina
+con due righe, invece di dipendere da una cartella che esiste solo su rings. È anche l'unica forma
+che ha una versione: `1.0.0` oggi, e un `/plugin update` quando cambia.
 
-Le versioni consolidate sono **più generiche** delle vecchie: i fatti del singolo repo sono stati
-tolti dalle skill e sostituiti da un passo "orientati" che li rileva. **Quei fatti vanno quindi
-scritti nel `CLAUDE.md` del repo, o si perdono.** È la parte che conta di questa migrazione; la
-copia dei file è la parte banale.
+> ⚠️ **Da verificare:** se una sessione di **Claude web** veda i plugin installati. Se non li
+> vedesse, lì i comandi non comparirebbero e servirebbe un secondo canale — ma non ne costruiamo uno
+> per un dubbio: si prova e si vede.
 
-## Procedura, uguale per tutti
+## Cosa resta da fare nei repo
 
-1. `~/workspace/dnz/sync.sh <repo> --check` — vedi cosa cambierebbe, senza scrivere.
-2. `~/workspace/dnz/sync.sh <repo>` — scrive nel working tree, non committa.
-3. `git diff` sui file vecchi: **quello che la versione nuova non dice più** è ciò che va nel
-   `CLAUDE.md`.
-4. Un commit solo, e la PR se il repo la richiede.
+Installare il plugin **non basta**: finché nei repo restano le copie vecchie in
+`.claude/commands/dnz/`, sono quelle a vincere, e continueresti a usare le versioni divergenti
+senza accorgertene.
+
+Quindi in ogni repo servono due cose:
+
+1. **Togliere le copie vecchie.**
+2. **Salvare nel `CLAUDE.md` i fatti del progetto che le versioni consolidate non contengono più.**
+
+Il secondo punto è quello che conta. Le skill nuove sono generiche: i fatti del singolo repo sono
+stati tolti e sostituiti da un passo "orientati" che li rileva. **Se quei fatti non sono scritti da
+nessuna parte, il rilevamento non trova niente** — e l'informazione si perde insieme al file che la
+conteneva.
+
+Sotto, un prompt per repo con l'elenco esatto.
 
 ---
 
@@ -43,7 +53,10 @@ Aveva 5 comandi: `deferred`, `merge`, `release`, `squash-story`, `ui-check`. Ne 
 > Allinea i comandi `/dnz:*` di questo repo alla fonte unica e salva i fatti del progetto che le
 > versioni consolidate non contengono più.
 >
-> **1.** Lancia `~/workspace/dnz/sync.sh . --check`, poi senza `--check`. Guarda il `git diff`.
+> **1.** Rimuovi la cartella `.claude/commands/dnz/` di questo repo: i comandi ora arrivano dal
+> plugin `dnz`, e le copie locali avrebbero la precedenza su di esso. Prima di cancellarle, apri
+> ogni file e confrontalo con la versione del plugin: quello che la versione nuova **non dice più**
+> è ciò che va salvato al punto 2.
 >
 > **2.** Le versioni nuove sono generiche: rilevano i fatti del repo invece di contenerli. Verifica
 > che questi fatti siano scritti nel `CLAUDE.md` — e scrivili dove mancano, perché finora vivevano
@@ -85,8 +98,9 @@ Aveva 5 comandi: `deferred`, `merge`, `release`, `squash-story`, `ui-check`. Ne 
 >   renderizza un titolo vuoto.** Se non regge, è una modifica a `scripts/lib/changelog.ts` e al
 >   componente, da fare qui.
 >
-> **4.** Un commit solo, e la PR se serve. Il `CLAUDE.md` cita `.claude/commands/dnz/squash-story.md`
-> come percorso: resta valido, la cartella non si sposta.
+> **4.** Un commit solo, e la PR se serve. ⚠️ Il `CLAUDE.md` cita
+> `.claude/commands/dnz/squash-story.md` come percorso: **quel percorso non esisterà più**, va
+> sostituito con il solo nome del comando, `/dnz:squash-story`.
 
 ---
 
@@ -97,7 +111,10 @@ Aveva 4 comandi: `audit`, `deferred`, `release`, `squash-story`. Ne riceve 7.
 > Allinea i comandi `/dnz:*` di questo repo alla fonte unica e salva i fatti del progetto che le
 > versioni consolidate non contengono più.
 >
-> **1.** Lancia `~/workspace/dnz/sync.sh . --check`, poi senza `--check`. Guarda il `git diff`.
+> **1.** Rimuovi la cartella `.claude/commands/dnz/` di questo repo: i comandi ora arrivano dal
+> plugin `dnz`, e le copie locali avrebbero la precedenza su di esso. Prima di cancellarle, apri
+> ogni file e confrontalo con la versione del plugin: quello che la versione nuova **non dice più**
+> è ciò che va salvato al punto 2.
 >
 > **2.** Verifica che questi fatti stiano nel `CLAUDE.md`, e scrivili dove mancano — finora vivevano
 > solo dentro i comandi:
@@ -144,7 +161,8 @@ Aveva solo `release`. Ne riceve 7.
 
 > Allinea i comandi `/dnz:*` di questo repo alla fonte unica e salva i fatti del progetto.
 >
-> **1.** Lancia `~/workspace/dnz/sync.sh . --check`, poi senza `--check`.
+> **1.** Rimuovi la cartella `.claude/commands/dnz/` di questo repo: i comandi ora arrivano dal
+> plugin `dnz`, e le copie locali avrebbero la precedenza su di esso.
 >
 > **2.** ⚠️ **Qui c'è una cosa da scoprire, non da ricopiare.** La copia vecchia di `dnz:release` era
 > la versione generica, identica a quella di altri repo, e questo repo **non ha uno
@@ -158,8 +176,9 @@ Aveva solo `release`. Ne riceve 7.
 > meccanismo, scrivilo comunque: "qui il rilascio si fa così" vale anche quando la risposta è "a
 > mano".
 >
-> **3.** Gli altri sei comandi arrivano insieme. `deferred` e `audit` si fermeranno da soli se non
-> c'è un registro dei rinvii; `ui-check` serve solo se il repo ha un'interfaccia. Non è un problema.
+> **3.** Il plugin porta tutti e sette i comandi. `deferred` e `audit` si fermeranno da soli se non
+> c'è un registro dei rinvii; `ui-check` serve solo se il repo ha un'interfaccia. Non è un problema:
+> meglio una skill che dice "qui non ho niente da fare" di una skill che manca quando serve.
 >
 > **4.** Un commit solo.
 
@@ -172,7 +191,10 @@ Aveva solo `release`. Ne riceve 7.
 > Allinea i comandi `/dnz:*` di questo repo alla fonte unica e salva i fatti del progetto che la
 > versione consolidata non contiene più.
 >
-> **1.** Lancia `~/workspace/dnz/sync.sh . --check`, poi senza `--check`. Guarda il `git diff`.
+> **1.** Rimuovi la cartella `.claude/commands/dnz/` di questo repo: i comandi ora arrivano dal
+> plugin `dnz`, e le copie locali avrebbero la precedenza su di esso. Prima di cancellarle, apri
+> ogni file e confrontalo con la versione del plugin: quello che la versione nuova **non dice più**
+> è ciò che va salvato al punto 2.
 >
 > **2.** Questi fatti vanno nel `CLAUDE.md` — finora vivevano solo dentro `dnz:release`:
 >
