@@ -1,5 +1,7 @@
 ---
+name: merge
 description: "Chiude un branch: merge --no-ff in locale e chiusura del ticket, poi chiede se pushare, rilasciare o fermarsi. Non cancella il branch, non rilascia da sé."
+disable-model-invocation: true
 ---
 
 # dnz:merge

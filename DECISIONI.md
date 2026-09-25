@@ -445,6 +445,69 @@ comparirebbero e servirebbe un secondo canale — ma si prova prima di costruirl
 raggiungibile da altre macchine il repo va pubblicato su GitHub (privato), ed è una decisione
 dell'utente.
 
+### 2026-09-25 — formato skill, non comandi
+
+Verificato sulla documentazione: *"Custom commands have been merged into skills. A file at
+`.claude/commands/deploy.md` and a skill at `.claude/skills/deploy/SKILL.md` both create `/deploy`
+and work the same way."* Non deprecati, **assorbiti** — e per il lavoro nuovo la raccomandazione è
+esplicita: *"Prefer a skill for new work, since skills also support supporting files."*
+
+Confermato dagli altri: **ECC** ha 281 skill contro 94 comandi, e il suo manifesto li chiama *"94
+legacy command shims"* — quelli rimasti sono dispatcher di tre righe con `agent:` e `subtask: true`,
+non procedure. **BMAD** ha 57 skill e zero comandi in quella forma, e le sue skill sono **cartelle**:
+`bmad-quick-dev/` ha `SKILL.md` più nove file di supporto.
+
+Convertite tutte e sette in `skills/<nome>/SKILL.md`, con `name` nel frontmatter (mancava; ECC e
+BMAD ce l'hanno sempre). `plugin.json` passa da `commands` a `skills`, versione **2.0.0**. I nomi
+non cambiano: `/dnz:merge` resta `/dnz:merge`.
+
+**Politica di invocazione, decisa una per skill** — è la cosa che cambia davvero il comportamento:
+`disable-model-invocation: true` su `merge`, `release` e `squash-story`, che pushano, rilasciano o
+riscrivono history e devono partire solo se le digiti. Default aperto su `journal`, `audit`,
+`deferred`, `ui-check` — `journal` in particolare per sua natura vuole accendersi quando la
+conversazione lo merita, non solo quando te lo ricordi.
+
+### 2026-09-25 — `squash-story` adotta il metodo di `dnz-squash`: si ri-partisce l'albero finale
+
+**Rovescia la decisione del 22 sui fix separati.** Scoperta `dnz-squash` in `subtxt` — una skill che
+il censimento iniziale aveva mancato perché cercava solo dentro `commands/` — e il suo metodo è
+diverso: invece di aggregare i commit esistenti con un rebase, fa `git reset --mixed <base>` e
+ricostruisce committando **gruppi di file**.
+
+Ho detto a prima vista che era "probabilmente migliore su branch senza story": era un'ipotesi
+inventata per spiegare perché esistesse, e falsa — subtxt usa BMAD come gli altri. Erano due metodi
+per la stessa situazione.
+
+**Vince ri-partire l'albero finale**, e l'argomento decisivo è che `squash-story` enunciava già quel
+principio nella propria riga d'apertura — *"deve vedere cosa è stato fatto, non i passi con cui ci
+si è arrivati"* — e poi non lo applicava ai fix. Una correzione fatta prima del merge **non è mai
+esistita nel prodotto**: registrarla come commit a sé è archeologia di processo. E si paga su
+`git blame`, la query più frequente e l'unica che ha solo git come fonte: su una riga corretta in
+review si atterrava su `fix(area): review integrata`, che parla del processo invece che del codice.
+
+Il mio argomento del 22 — "i commit di fix dicono cosa la review ha trovato" — era più debole di
+come l'avevo presentato: **quell'informazione ha già una casa** (la PR, i commenti, i report in
+`.claude/reviews/`), mentre *perché questa riga è fatta così* ha solo git. Avevo difeso la fonte
+ridondante a spese di quella unica.
+
+**Portato dentro da `squash-story` ciò che `dnz-squash` non aveva:** il gate sui commenti di riga
+aperti, la precondizione sui merge dentro il branch (ricostruendo da `$BASE` ti attribuiresti le
+modifiche del default), la tassonomia della provenienza con il livello "niente", il riallineamento
+della PR con l'avvertenza su `gh pr edit`, la nota sulla CI e `[skip ci]`.
+
+**Portato da `dnz-squash`:** il metodo, il gate sul raggruppamento (*"il raggruppamento è la
+decisione che l'utente ti sta delegando"*), e la trappola dello «Squash and merge» dalla UI di
+GitHub, che rimette tutto in un commit solo e vanifica il lavoro.
+
+**Aggiunto, che nessuna delle due aveva:** `git add -p` per dividere un file fra due gruppi — la
+regola *"un file non si divide"* di `dnz-squash` era una semplificazione, non un limite di git.
+
+**Semplificazione grossa che il metodo nuovo regala:** `baseline_commit` non si ripara più dopo con
+un secondo rebase a fermate `edit` — si **scrive giusto** mentre si ricostruisce. Via ~70 righe,
+incluso il workaround per `--amend` bloccato da GateGuard.
+
+**Da fare:** ritirare `dnz-squash` da subtxt.
+
 ## Aperti
 
 - Il rename via API di GitHub ritargheta davvero le PR aperte? Non più rilevante per `squash-story`
@@ -452,3 +515,4 @@ dell'utente.
 - Claude web vede i plugin installati? Da provare. Se no, serve un secondo canale per le sessioni
   web — ma non lo si costruisce prima di saperlo.
 - `~/workspace/dnz` non ha un remoto: senza pubblicarlo su GitHub il marketplace funziona solo qui.
+- Ritirare `dnz-squash` da `subtxt/.claude/skills/`, ora che il suo metodo e' dentro `squash-story`.

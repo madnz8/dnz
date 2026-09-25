@@ -1,4 +1,5 @@
 ---
+name: audit
 description: "Audit periodico del repo: verifica che codice, tracking e infrastruttura dicano la stessa cosa, e produce un report datato con verdetto, finding per severità e priorità. Delta-first."
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: deferred
 description: "Triage periodico del registro dei rinvii: verifica ogni voce contro il codice reale, archivia il finito, marca il non-lavoro e riscrive il piano di cosa conviene fare adesso."
 ---
 

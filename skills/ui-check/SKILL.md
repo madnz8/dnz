@@ -1,4 +1,5 @@
 ---
+name: ui-check
 description: "Verifica visivamente l'interfaccia di una feature: lancia l'app vera, la naviga come un utente, cattura le prove e le pubblica sulla PR. Non è una code review."
 ---
 

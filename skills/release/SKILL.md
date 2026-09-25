@@ -1,5 +1,7 @@
 ---
+name: release
 description: "Rilascia ciò che è sul branch di default: pubblica i merge accumulati, changelog + bump + tag + push, poi ripulisce i branch morti."
+disable-model-invocation: true
 ---
 
 # dnz:release

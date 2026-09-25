@@ -1,4 +1,5 @@
 ---
+name: journal
 description: "Tiene il diario di bordo di un progetto: decisioni, fatti e correzioni di ogni sessione. Invocarla accende la scrittura per tutta la chat, non è un'azione una tantum."
 ---
 
