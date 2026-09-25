@@ -71,11 +71,24 @@ importato. Un report che ricopia il conteggio dello strumento senza il trace è 
 
 ## 2 — Codice
 
-Leggere **integralmente** — non a campione — i sorgenti toccati dal delta, più **ogni migrazione di
-database riga per riga**: una tabella rigenerata che perde policy, grant o vincoli è il tipo di
-danno che nessun test coglie.
+Due letture diverse, e servono **entrambe**. Non sono ridondanti: la prima guarda un diff, la
+seconda guarda i file.
 
-Tre lenti, in quest'ordine:
+**a. Il diff, delegato.** Lancia `/code-review` sul range del delta. Fa quel lavoro meglio di quanto
+lo possa descrivere questa pagina, e **non presuppone niente**: che ci sia stata o no una review al
+momento della PR, qui si rivede comunque. I suoi finding entrano nel report del passo 5, non in un
+documento a parte.
+
+**b. La lettura integrale, che un diff non può dare.** Leggere **per intero** — non a campione — i
+sorgenti toccati dal delta, più **ogni migrazione di database riga per riga**: una tabella
+rigenerata che perde policy, grant o vincoli è il tipo di danno che nessun test coglie.
+
+⚠️ **È questa la parte che giustifica l'audit.** Un diff mostra solo ciò che è cambiato: non vede
+una regola violata in un file che nessuno tocca da mesi, né un indice che non è mai stato aggiunto,
+né una convenzione scivolata via un commit alla volta. Chi salta la lettura integrale ha fatto una
+code review in ritardo, non un audit.
+
+Tre lenti per la lettura integrale, in quest'ordine:
 
 1. **Conformità al `CLAUDE.md`.** Le regole del repo che si violano senza che niente si rompa: dove
    possono stare le variabili d'ambiente, quali convenzioni di naming, quale versione di una
@@ -130,8 +143,17 @@ Nuovo file datato, nella **forma della serie** letta al passo 0:
    **È la sezione che ripaga il costo dell'audit** — senza, il giro dopo si ri-indaga tutto da capo.
 6. **Conformità al `CLAUDE.md`.**
 
-Aggiorna l'indice dei report. Se emergono batch di fix, il piano va in un **file separato**, con le
-sue etichette e il suo kickoff — non dentro il report.
+Aggiorna l'indice dei report.
+
+⚠️ **Il piano è uno solo, e non è questo.** Al passo 3 hai lanciato `/dnz:deferred`, che ha già
+riscritto il suo piano — batch, ordine, minimo indispensabile, cosa ha scartato e perché. Il report
+**ci rimanda**, non lo riscrive: due documenti che dicono cosa fare, prodotti a dieci minuti di
+distanza, divergono al primo che qualcuno aggiorna, e da lì in poi nessuno sa quale vale.
+
+Quindi la sezione 5 di questo report contiene **solo ciò che il piano dei rinvii non può sapere** —
+i finding di codice, test, configurazione e infrastruttura emersi qui — e per il resto dice dove
+sta il piano. Se quei finding meritano batch loro, si aggiungono **al piano dei rinvii**, non a un
+secondo elenco.
 
 ## 6 — Consegna
 

@@ -355,11 +355,66 @@ Questo risolve anche il dubbio sul contenitore: **una sede unica va bene per tut
 della seconda e terza fascia si fermano da sole quando i presupposti mancano. Non serve installare
 sottoinsiemi diversi per repo diversi.
 
+### 2026-09-25 — `audit`: il piano è uno solo, quello di `deferred`
+
+Difetto introdotto consolidandole separatamente: `audit` lancia `deferred` al §3, che scrive il suo
+piano; poi `audit` scriveva la propria sezione "interventi per priorità". **Due documenti che dicono
+cosa fare, prodotti a dieci minuti di distanza**, destinati a divergere al primo aggiornamento — e
+da lì in poi nessuno sa quale vale.
+
+Risolto: il report di `audit` **rimanda** al piano dei rinvii e contiene solo ciò che quel piano non
+può sapere (finding di codice, test, configurazione, infrastruttura). Se quei finding meritano batch
+loro, si aggiungono al piano dei rinvii, non a un secondo elenco.
+
+### 2026-09-25 — `audit` §2: il diff si delega, la lettura integrale no
+
+Prima formulazione mia, sbagliata a metà e corretta dall'utente: non si presume che ci sia stata una
+code review prima dell'audit. Il §2 ora fa **due letture diverse e non ridondanti**:
+
+- **il diff**, delegato a `/code-review` sul range del delta — meglio di quanto questa pagina possa
+  descrivere, e senza presupporre niente su cosa sia successo alla PR;
+- **la lettura integrale dei file**, che un diff strutturalmente non può dare: una regola violata in
+  un file che nessuno tocca da mesi, un indice mai aggiunto, una convenzione scivolata via un commit
+  alla volta. *"Chi salta la lettura integrale ha fatto una code review in ritardo, non un audit."*
+
+### 2026-09-25 — `merge` chiede come chiudere, e questo risolve due punti aperti
+
+Il §4 non è più un messaggio di commiato ma **una domanda con tre opzioni**: pusho adesso / lancio
+`/dnz:release` / mi fermo. La skill non pusha di propria iniziativa — pusha solo se viene scelta
+l'opzione 1.
+
+Chiude entrambi i punti che erano in sospeso: il push non è più "menzionato" ma una scelta
+esplicita, e **l'opzione 1 è il modo di pubblicare senza rilasciare**, che era esattamente quello che
+mancava quando si accumulano più merge prima di un rilascio.
+
+### 2026-09-25 — via la rinomina del branch: il messaggio di merge la rende inutile
+
+Revoca della decisione del 2026-09-22, dopo la domanda dell'utente. Il conto non torna: **il nome
+del branch lascia un segno permanente in un posto solo, il subject del merge commit — e quel
+messaggio lo scriviamo noi.** Il formato ora rende il nome **facoltativo**: quando è muto, al suo
+posto va una descrizione di cosa è atterrato (`merge(alloggiati): ricevute di deposito dalla
+Questura`). Costo zero, rischio zero.
+
+Rinominare invece cancella e ricrea il ref, quindi rompe tutto ciò che è agganciato al nome — filtri
+di branch in CI, regole di protezione, preview di deploy — e l'API che ritargheta le PR non era mai
+stata misurata. Sezione rimossa da `squash-story` (32 righe), rimando rimosso da `merge`.
+
+### 2026-09-25 — la CI riparte dopo lo squash, e `[skip ci]` non è la risposta
+
+Il force-push emette `push` e `pull_request.synchronize`: la pipeline riparte, e non si evita
+pulitamente.
+
+`[skip ci]` funziona solo nel messaggio del **commit di testa**, che dopo lo squash è il commit di
+story — quello che resta per sempre: ci si infilerebbe un'istruzione per la CI, cioè l'archeologia
+di processo che la skill esiste per togliere. Peggio: saltando il run, l'ultimo verde della PR resta
+agganciato ai commit pre-squash che non esistono più, e **su un repo con status check obbligatori
+una PR il cui commit di testa non ha check non si può mergiare**.
+
+Quello che si fa: `concurrency: cancel-in-progress` per non pagarlo due volte, e sapere che il run è
+**ridondante per costruzione** — il gate ha appena dimostrato che l'albero è identico, quindi un
+rosso lì è un flake, non una regressione.
+
 ## Aperti
 
-- Il messaggio di chiusura nomina ancora il push come passo successivo dell'utente (non lo
-  esegue). Se "levare il push" voleva dire non menzionarlo affatto, va tolto anche di lì.
-- Con `merge` che non pusha e `release` che pusha, il lavoro mergiato ma non rilasciato resta sulla
-  macchina a tempo indefinito. Va bene se ogni merge finisce in un rilascio ragionevolmente vicino;
-  se invece capita di accumulare merge per settimane senza rilasciare, serve un modo per pubblicare
-  senza rilasciare — oggi non c'è.
+- Il rename via API di GitHub ritargheta davvero le PR aperte? Non più rilevante per `squash-story`
+  (sezione rimossa), ma resta un fatto non verificato se dovesse servire altrove.

@@ -90,38 +90,6 @@ gh repo view --json nameWithOwner -q .nameWithOwner                             
 > conversazione della PR, staccati dal codice) e vai. È il costo normale di questa operazione, non
 > un incidente — a review conclusa quei commenti hanno già dato quello che dovevano dare.
 
-## Il nome del branch, finché si è in tempo
-
-Il nome finisce **dentro la history permanente**: `/dnz:merge` scrive `merge branch '<nome>'` nel
-commit di merge, sul branch di default. Dopo, è lì per sempre. Questo è l'ultimo momento comodo per
-cambiarlo.
-
-**Passo opzionale.** Se il nome descrive già il lavoro, salta senza dire niente. Proponilo solo se
-il nome è muto (`fix-2`, `test`, `wip`, `patch-1`), se è fuorviante, o se il lavoro ha cambiato
-strada rispetto a quando il branch è nato. Un nome funzionale dice **l'area e la cosa fatta**, con
-lo stesso vocabolario degli scope dei commit: `feat/alloggiati-ricevute`, non `alloggiati2`.
-
-⚠️ **Se c'è una PR aperta, non rinominare con git.** Rinominare in locale, cancellare il vecchio
-branch sul remoto e pushare il nuovo **chiude la PR**: GitHub la considera orfana, e review e
-conversazione restano attaccate a un branch che non esiste più. La via che la preserva è l'API di
-rename, che rinomina anche sul remoto e ritarghetta le PR aperte:
-
-```bash
-gh api --method POST repos/<owner>/<repo>/branches/<vecchio>/rename -f new_name=<nuovo>
-git fetch origin && git checkout <nuovo>     # riallinea il locale
-BR=<nuovo>
-```
-
-> **Da verificare alla prima esecuzione.** A differenza dell'avvertenza su `gh pr edit` al passo 7,
-> questa non è misurata: che l'API ritargheti le PR aperte è documentato da GitHub, non provato qui.
-> Controlla che la PR sia ancora aperta e punti al nome nuovo prima di proseguire.
-
-Senza PR aperta basta git: rinomina locale, push del nuovo con `-u`, e via il vecchio dal remoto se
-c'era già arrivato.
-
-**Rinomina prima del backup del passo 1**, così il branch di backup nasce già con il nome nuovo e
-non ti resta un `backup/pre-squash-<vecchio-nome>` a raccontare un'altra storia.
-
 ## 1 — Backup (non negoziabile, ma effimero)
 
 ```bash
@@ -378,6 +346,27 @@ git push --force-with-lease
 
 `--force-with-lease`, mai `--force`: fallisce se qualcuno ha pushato nel frattempo, invece di
 sovrascriverlo.
+
+### Questo push fa ripartire la CI, e non si può evitare pulitamente
+
+Il force-push emette `push` e `pull_request.synchronize`: la pipeline riparte. **Mettilo in conto e
+dillo all'utente**, invece di fargliela scoprire dalle notifiche.
+
+⚠️ **Non usare `[skip ci]`.** Funziona solo se sta nel messaggio del **commit di testa**, che dopo lo
+squash è il tuo commit di story — quello che resta nella history per sempre. Ci infileresti
+un'istruzione per la CI, cioè esattamente l'archeologia di processo che questa skill esiste per
+togliere. E c'è un secondo effetto peggiore: saltando il run, l'ultimo esito verde della PR resta
+agganciato ai commit **pre-squash**, che non esistono più — e su un repo con status check
+obbligatori una PR il cui commit di testa non ha check **non si può mergiare**.
+
+Quello che si fa invece:
+
+- **non pagarlo due volte** — `concurrency: { group: …, cancel-in-progress: true }` nel workflow
+  cancella il run in volo invece di accodarne un altro. Costo: un run solo;
+- **sapere che è ridondante per costruzione.** Il gate del passo 4 ha appena dimostrato che l'albero
+  è identico bit per bit: l'esito della CI **non può cambiare**. Se torna rosso dove prima era
+  verde, è un flake o un passo non deterministico della pipeline — non una regressione del tuo
+  lavoro.
 
 ## 7 — Riallinea la PR (se esiste)
 

@@ -1,5 +1,5 @@
 ---
-description: "Chiude un branch: merge --no-ff in locale e chiusura del ticket. Non pusha il branch di default, non cancella il branch, non rilascia."
+description: "Chiude un branch: merge --no-ff in locale e chiusura del ticket, poi chiede se pushare, rilasciare o fermarsi. Non cancella il branch, non rilascia da sé."
 ---
 
 # dnz:merge
@@ -11,9 +11,9 @@ niente operazioni dalla UI di GitHub. La PR serve per la review e la preview; il
 
 **Cosa non fa:**
 
-- **Non pusha il branch di default.** Il push è il passo irreversibile della giornata e in molti
-  repo fa partire un deploy: resta un gesto tuo. A fine corsa il default locale è avanti e non
-  pushato, e la skill te lo dice.
+- **Non pusha di propria iniziativa.** Il push sul default è il passo irreversibile della giornata e
+  in molti repo fa partire un deploy. A fine corsa la skill si ferma e **ti chiede** se pushare,
+  rilasciare o lasciare tutto in locale (passo 4): pusha solo se glielo dici lì.
 - **Non cancella il branch.** Sopravvive al merge; se va tolto, lo togli quando vuoi.
 - **Non rilascia.** Il rilascio ha tempi suoi e non è detto che vada fatto adesso: a fine corsa
   questa skill te lo ricorda, e basta.
@@ -32,9 +32,10 @@ git branch --show-current                                                       
 - **Ticket** — c'è un tracker (Linear, Jira, GitHub Issues)? Il ticket si deduce dal nome del
   branch, dai commit o dal corpo della PR? Se non lo trovi, il passo 3 semplicemente **non si fa**:
   non si inventa un ticket per avere qualcosa da chiudere.
-- **Il nome del branch** finisce nel messaggio del passo 2, e da lì nella history permanente del
-  branch di default. Se è muto o fuorviante, **questo è l'ultimo momento per cambiarlo** — ma non si
-  rinomina qui: la procedura, con l'avvertenza sulle PR aperte, sta in `/dnz:squash-story`.
+- **Il nome del branch** è l'unica cosa che da qui finisce nella history permanente del branch di
+  default, e ci finisce solo attraverso il messaggio del passo 2. Se è muto (`fix-2`, `wip`) o
+  fuorviante, **non si rinomina il branch**: si scrive un messaggio migliore. Vedi il formato al
+  passo 2 — il nome lì dentro è facoltativo.
 
 ## 1 — Precondizioni
 
@@ -80,6 +81,16 @@ Formato di default, se il repo non ne impone un altro:
 merge(<area>): merge branch '<nome-branch>' (<ticket>)
 ```
 
+**Il nome del branch è facoltativo.** Quando è muto o fuorviante, al suo posto va **una descrizione
+di cosa è atterrato** — che è l'informazione che si cercava lì:
+
+```
+merge(alloggiati): ricevute di deposito dalla Questura (RAW-62)
+```
+
+È il motivo per cui non serve rinominare il branch prima del merge: il messaggio lo scriviamo noi,
+e può dire la cosa giusta indipendentemente da come si chiamava il ramo.
+
 - `<area>` è l'**area di dominio** toccata dal lavoro, non il tipo conventional-commit: non
   `fix`/`feat` ma il *dove* (`auth`, `billing`, `ui`, `refactor`, `docs`…). Deve essere una chiave a
   bassa cardinalità che **ricorre nel tempo**: un'area torna per anni, un numero di ticket compare
@@ -87,8 +98,8 @@ merge(<area>): merge branch '<nome-branch>' (<ticket>)
 - `<ticket>` sono i ticket coperti dal branch, separati da virgola. Se non ce ne sono, si omette la
   parentesi — non si inventa.
 
-A questo punto il branch di default **locale** è avanti, ma non ancora pushato. **Resta così**:
-questa skill non lo pusha.
+A questo punto il branch di default **locale** è avanti, ma non ancora pushato. Resta così fino al
+passo 4, dove si decide insieme cosa farne.
 
 ## 3 — Chiusura del ticket *(solo se ce n'è uno)*
 
@@ -115,14 +126,32 @@ verifica se il branch lo copre **davvero per intero**. Poi:
 >
 > Le issue *contenitore* (bucket, epic ancora aperti) non si chiudono mai: solo commento.
 
-## 4 — Dove ti lascia
+## 4 — Chiedi come si chiude
 
-Il merge non pusha e non rilascia. Chiudi dicendo all'utente dove si trova, senza eseguire nulla
-di tutto questo:
+A questo punto il merge è fatto **in locale** e il ticket è chiuso. Il branch di default è avanti e
+non pushato, e il branch di partenza è ancora dov'era.
 
-> «Fatto: `<branch>` è dentro `<branch-di-default>` **in locale**, e `<ticket>` è chiuso. Il
-> default non è pushato e il branch `<branch>` è ancora lì: sono due gesti tuoi. Se vuoi
-> rilasciare: `/dnz:release`.»
+**Riassumi lo stato in due righe e chiedi**, con tre opzioni:
 
-Se il repo non ha un meccanismo di release (nessun tag, nessun changelog), ometti l'ultima riga:
-non suggerire un passo che in questo repo non esiste.
+> «Fatto: `<branch>` è dentro `<branch-di-default>` in locale, e `<ticket>` è chiuso. Il default è
+> avanti di `<n>` commit e non è pushato. Come chiudiamo?
+>
+> 1. **Pusho adesso** — il lavoro diventa pubblico, senza rilasciare;
+> 2. **`/dnz:release`** — pubblica e rilascia in un colpo;
+> 3. **Mi fermo** — resta tutto in locale.»
+
+**Non scegliere al posto suo, e non eseguire niente prima della risposta.** Questa skill non pusha
+di propria iniziativa: pusha solo se l'opzione 1 viene scelta esplicitamente.
+
+Sull'opzione 1 — è il modo di **pubblicare senza rilasciare**, che serve quando si accumulano più
+merge prima di un rilascio:
+
+```bash
+git push origin <branch-di-default>
+```
+
+> ⚠️ Se il repo dichiara che il push sul default fa partire un deploy, **dillo prima di eseguirlo**,
+> non dopo.
+
+Se il repo non ha un meccanismo di release (nessun tag, nessun changelog), **ometti l'opzione 2**:
+non offrire un passo che in questo repo non esiste.
