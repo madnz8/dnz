@@ -11,7 +11,7 @@ Il repo `dnz` **è** un marketplace: `.claude-plugin/marketplace.json` lo dichia
 macchina:
 
 ```
-/plugin marketplace add <owner>/dnz
+/plugin marketplace add madnz8/dnz
 /plugin install dnz@dnz
 ```
 
