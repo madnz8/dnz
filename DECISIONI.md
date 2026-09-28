@@ -508,11 +508,88 @@ incluso il workaround per `--amend` bloccato da GateGuard.
 
 **Da fare:** ritirare `dnz-squash` da subtxt.
 
-## Aperti
+### 2026-09-28 — il plugin non si vede da Claude web
 
-- Il rename via API di GitHub ritargheta davvero le PR aperte? Non più rilevante per `squash-story`
-  (sezione rimossa), ma resta un fatto non verificato se dovesse servire altrove.
-- Claude web vede i plugin installati? Da provare. Se no, serve un secondo canale per le sessioni
-  web — ma non lo si costruisce prima di saperlo.
-- `~/workspace/dnz` non ha un remoto: senza pubblicarlo su GitHub il marketplace funziona solo qui.
-- Ritirare `dnz-squash` da `subtxt/.claude/skills/`, ora che il suo metodo e' dentro `squash-story`.
+Provato: **no.** Quindi plugin e file nel repo non sono alternative ma canali per posti diversi — il
+plugin copre le macchine, solo i file committati arrivano al web. Tre strade, nessuna ancora scelta:
+copiare le skill nei repo generandole dalla fonte; dichiarare marketplace e plugin nel
+`settings.json` di progetto (da provare, e il repo e' privato: il web dovrebbe poterlo clonare);
+oppure accettare che da web non ci siano.
+
+⚠️ Se si copiano nei repo: **il prefisso `dnz:` lo da' il plugin, non la cartella.** Una skill in
+`.claude/skills/merge/` si chiama `/merge`. Le uscite sono chiamarle `dnz-merge` eccetera, o restare
+su `.claude/commands/dnz/*.md` che il prefisso lo da' ma e' il formato vecchio.
+
+### 2026-09-28 — `deferred`: due mondi, non due formati — e niente script
+
+Partiti dal feedback di subtxt («la skill presume auto-bmad, qui non c'e'»). Il censimento ha
+mostrato che il quadro e' diverso da come il feedback lo descriveva:
+
+| | atala | lifehacker | subtxt |
+|---|---|---|---|
+| script `deferred_ledger.py` | 1761 righe | **963 righe** | assente |
+| capisce le voci `source_spec` | si | **no** | — |
+| voci ricche nel registro | 18 | 8 | 98 |
+| marcatori di chiusura | 25 | 18 | **0** |
+
+**Le due copie dello script upstream divergono**: "ho trovato `deferred_ledger.py`" non dice cosa sa
+fare. Quella di lifehacker non ha `SOURCE_SPEC_BULLET_RE` ne' `extract_fields` ne' `harvest`.
+
+**Il rischio di perdita dati non c'e'**: il ciclo che delimita le voci lavora sull'indentazione, non
+sui nomi dei campi, quindi una voce multi-riga resta intera anche dove lo script non la
+*interpreta*. E' degrado (quelle voci risultano sempre `open`), non corruzione.
+
+**Verificato di chi sono le cose**, ed e' il punto che cambia il disegno:
+
+- `deferred-work.md` e' di **BMAD**: in subtxt lo scrivono `bmad-build` e `bmad-code-review`, con
+  l'istruzione testuale *"append one new entry … Do not modify existing entries or look for
+  duplicates"*. **Nessun passo lo rilegge.**
+- `deferred-work-resolved.md` — l'archivio — e' **solo di auto-bmad**: nessuna skill `bmad-*` lo
+  nomina, e in subtxt non esiste.
+
+Quindi **in subtxt quel file e' una casella di posta in entrata, non un registro**: 98 voci e zero
+marcatori non perche' nessuno le abbia chiuse, ma perche' non e' mai esistito un meccanismo per
+farlo. Portarci il triage non e' "adattarsi a un secondo formato": e' **portare una pratica dove non
+c'era**.
+
+Due conseguenze che semplificano:
+
+1. **I marcatori li' non sono un contratto con nessuno.** La spunta in testa, il `(remainder)` in
+   inglese: servono a far funzionare `classify_hint`. Senza parser sono cargo cult — basta essere
+   coerenti per la passata dopo.
+2. **L'archivio li' sarebbe una nostra invenzione.** Esiste in auto-bmad per tenere piccolo il file
+   che il suo script ri-parsifica. Senza parser, tenere le voci chiuse al loro posto e' legittimo —
+   e probabilmente giusto, visto che BMAD dice di non toccare le voci esistenti: marcarle e' gia' al
+   limite, spostarle lo supera.
+
+**Niente script nel plugin.** Non per ripensamento: **cade il lavoro che avrebbe dovuto fare** —
+niente archivio da riempire, nessun parser da proteggere. Resta il triage vero, che non dipende da
+nessuno strumento.
+
+**Da fare (punto 2, non ancora iniziato):** il §0 di `deferred` deve capire **in quale dei due mondi
+si trova**, perche' sono due comportamenti diversi e non due percorsi per lo stesso. Le precondizioni
+vanno separate — "il registro esiste" non implica "esiste qualcosa che lo sa leggere", ed e' per
+questo che oggi in subtxt la skill parte verso il nulla. E la skill deve dichiarare **quale copia
+dello strumento ha trovato e cosa sa fare**.
+
+## Aperti — stato alla pausa del 2026-09-28
+
+**Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato
+su `github.com/madnz8/dnz` (privato) e installato in `~/admin` con **scope=project**.
+
+**Aperto, in ordine di dipendenza:**
+
+1. **`deferred`, punto 2** — il §0 che distingue i due mondi, le precondizioni separate, la skill che
+   dichiara quale strumento ha trovato. Deciso, non iniziato.
+2. **Le copie vecchie nei repo** — atala (5), lifehacker (4), lead-generation (1), trasformazione (1),
+   piu' le 3 a livello utente. I prompt sono in `MIGRAZIONE.md` ma vanno allineati: parlano di
+   "comandi" e non menzionano che ora arriva un plugin di skill.
+3. **`dnz-squash` in subtxt** — da ritirare, il suo metodo e' dentro `squash-story`.
+4. **Claude web** — scegliere fra le tre strade qui sopra, dopo aver provato quella del
+   `settings.json`.
+5. **`DECISIONI.md` e `MIGRAZIONE.md` viaggiano dentro il plugin** perche' stanno nella radice del
+   repo. Non fanno danno, ma sono documenti interni distribuiti a ogni installazione: valutare se
+   spostarli in `docs/`.
+6. **Mai valutate:** una `dnz:pr` per aprire la PR (primo anello mancante della catena) e una
+   `dnz:review-pr` sottile sopra il `/code-review` built-in, che aggiunga dove va il report e la
+   tassonomia di severita'.
