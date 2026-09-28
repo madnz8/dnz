@@ -106,8 +106,8 @@ Tre lenti per la lettura integrale, in quest'ordine:
 
 **È la parte che i repo sbagliano di più**, ed è il motivo principale per cui questa skill esiste.
 
-1. **Registro dei rinvii**: lancia **`/dnz:deferred`** — triage completo, marcatori, archivio,
-   piano. È il pezzo grosso, e ha le sue regole.
+1. **Registro dei rinvii**: lancia **`/dnz:deferred`** — triage completo, marcatori, archivio
+   dove c'è lo script per farlo, piano. È il pezzo grosso, e ha le sue regole.
 2. **Stato di story ed epiche**: ogni voce non chiusa e ogni action item aperto si verifica
    **contro git** (`git log`, `gh pr view`), **mai contro un altro file di tracking** — quello
    eredita lo stesso drift e te lo conferma.

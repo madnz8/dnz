@@ -1,26 +1,34 @@
 ---
 name: deferred
-description: "Triage periodico del registro dei rinvii: verifica ogni voce contro il codice reale, archivia il finito, marca il non-lavoro e riscrive il piano di cosa conviene fare adesso."
+description: "Triage periodico del registro dei rinvii: verifica ogni voce contro il codice reale, marca il finito e il non-lavoro, archivia dove c'è lo strumento per farlo, e riscrive il piano di cosa conviene fare adesso."
 ---
 
 # dnz:deferred
 
-Triage periodico del **registro dei rinvii**: verifica ogni voce **contro il codice reale**, chiude
-quelle già fatte, marca quelle che non sono lavoro, archivia il finito e **riscrive il piano** di
-cosa conviene fare adesso.
+Triage periodico del **registro dei rinvii**: verifica ogni voce **contro il codice reale**, marca
+quelle già fatte e quelle che non sono lavoro, e **riscrive il piano** di cosa conviene fare adesso.
 
 Si lancia **a mano**, ogni tanto. Il momento naturale è **prima di una release**, a epic chiusa: il
 registro ha appena ricevuto le voci nuove e non c'è una pipeline in volo.
 
-> **Questa skill presuppone un registro dei rinvii su disco**, prodotto da una pipeline tipo
-> `auto-bmad`. In un repo che non ce l'ha non ha niente da fare: le precondizioni la fermano subito,
-> ed è il comportamento giusto — non c'è un equivalente da inventare.
+> **Due mondi, due comportamenti.** Il registro (`deferred-work.md`) lo scrive BMAD. Chi lo sa
+> *rileggere* no: esiste solo dove c'è `auto-bmad`, col suo script `deferred_ledger.py`.
+>
+> - **Mondo A — c'è lo script.** La skill **guida lo script** e rispetta la sua grammatica, perché
+>   dall'altra parte c'è un parser: marcatori con le parole inglesi che riconosce, archivio, controllo
+>   sha.
+> - **Mondo B — non c'è.** Il file è una casella di posta in entrata: BMAD ci appende e nessuno lo
+>   rilegge. La skill fa il triage **scrivendo nel file con prudenza** — marcatori italiani, niente
+>   archivio, niente vocabolario inglese.
+>
+> Il passo 0 stabilisce in quale sei **prima** di toccare qualsiasi cosa. Senza registro la skill non
+> ha niente da fare e si ferma.
 
 ## Perché esiste
 
-A fine epic la pipeline fa già la sua passata (`deferred-reconcile` + `archive`). È reale e fa
-lavoro vero — su un epic di atala-portal ha verificato 108 voci e ne ha archiviate 11. Ma ha **due
-limiti strutturali** che questo comando copre:
+**Nel mondo A** la pipeline a fine epic fa già la sua passata (`deferred-reconcile` + `archive`). È
+reale e fa lavoro vero — su un epic di atala-portal ha verificato 108 voci e ne ha archiviate 11. Ma
+ha **due limiti strutturali** che questa skill copre:
 
 1. **Non è esaustiva.** Gira dentro una pipeline che ha appena fatto altre otto fasi, con il budget
    che le resta. La passata del 2026-07-27 ha verificato tutte le voci aperte e **non ha trovato**
@@ -37,33 +45,99 @@ Il bisogno è misurato, non ipotetico: su lifehacker l'audit del 2026-08-16 ha t
 risolte o obsolete senza marcatore**, inclusa una voce marcata rossa chiusa sei settimane prima e
 ancora leggibile come difetto vivo di produzione.
 
-⚠️ **Questo comando NON tocca la pipeline.** `auto-bmad` e le skill `bmad-*` sono upstream e vengono
-aggiornate: una modifica lì dentro sparisce in silenzio al primo aggiornamento. Qui si **invocano**
-i loro script dall'esterno, mai si modificano.
+**Nel mondo B** non c'è nessuna passata. `bmad-build` e `bmad-code-review` appendono con
+l'istruzione *«Do not modify existing entries or look for duplicates»*, e nessun passo rilegge il
+file. Misurato su subtxt: **98 voci, zero marcatori** — non perché nessuno le abbia chiuse, ma perché
+non è mai esistito un modo per farlo. Qui la skill non integra una pratica: la porta.
+
+⚠️ **Questa skill NON tocca la pipeline.** `auto-bmad` e le skill `bmad-*` sono upstream e vengono
+aggiornate: una modifica lì dentro sparisce in silenzio al primo aggiornamento. Nel mondo A i loro
+script si **invocano** dall'esterno, mai si modificano.
 
 ## Le tre regole ferree
 
-Se una di queste viene violata il comando ha fatto danno, non lavoro.
+Se una di queste viene violata la skill ha fatto danno, non lavoro.
 
-1. **Non si cancella mai niente.** Una voce si marca oppure si archivia — e l'archivio è un file,
-   non il cestino. Nessuna voce esce dal repo.
+1. **Non si cancella mai niente.** Una voce si marca — e nel mondo A, poi, si archivia: l'archivio è
+   un file, non il cestino. Nessuna voce esce dal repo.
 2. **Nel dubbio si tiene.** È l'asimmetria normativa di BMAD: *«a wrongly-KEPT item is merely
    re-folded once (harmless); a wrongly-MARKED item is silently archived and its real follow-up work
    is dropped»*. Evidenza indiretta, voce vaga, solo una parte chiaramente fatta ⇒ **si lascia
    esattamente com'è**.
-3. **Byte-preservazione sul registro.** Gli script della pipeline ri-parsificano questo file con la
-   stessa grammatica. Si modificano **solo** i bullet che il passo 2 ha confermato; intestazioni
-   `## Deferred from:`, ordine, annidamento e prosa delle altre voci restano identici. Mai
-   riordinare, mai riformulare, mai aggiungere voci nuove.
+3. **Si aggiunge, non si riscrive.** Si modificano **solo** le voci che il passo 2 ha confermato, e
+   solo nel punto del marcatore; ordine, annidamento, intestazioni e prosa delle altre voci restano
+   identici byte per byte. Mai riordinare, mai riformulare, mai aggiungere voci nuove. La ragione
+   cambia col mondo, la regola no: nel mondo A lo script ri-parsifica il file con la stessa
+   grammatica; nel mondo B è BMAD a dire di non modificare le voci esistenti — marcarle è già al
+   limite, riscriverle lo supera.
 
 ## 0 — Orientati nel repo
 
-**Rileva, non presumere.** Cinque cose:
+**Rileva, non presumere.** L'ordine conta: le prime due cose decidono il mondo, e il mondo decide
+cosa fanno i passi 1, 3, 4 e 5.
 
-- **Il registro e l'archivio** — di norma `_bmad-output/implementation-artifacts/deferred-work.md` e
-  `deferred-work-resolved.md`. Se non ci sono, **fermati**: vedi il riquadro in cima.
-- **Lo script** che li manipola — di norma `.claude/skills/auto-bmad/scripts/deferred_ledger.py`. Se
-  il percorso è diverso, usa quello vero; non reimplementarne il lavoro a mano.
+### Il registro
+
+Di norma `_bmad-output/implementation-artifacts/deferred-work.md`. Se non c'è, o è vuoto,
+**fermati**: non c'è niente da triare, e non è un errore da sistemare.
+
+### Chi lo sa leggere
+
+```bash
+git ls-files -co --exclude-standard | grep '/deferred_ledger\.py$'
+```
+
+**Se non trovi niente → mondo B.** Salta al resto del passo 0.
+
+**Se lo trovi, non basta averlo trovato: le copie divergono.** Quella di atala ha 1761 righe e
+quella di lifehacker 963; la seconda non sa leggere le voci `source_spec` fuori da un'intestazione
+`## Deferred from:`, e su un registro fatto così **restituisce zero voci, senza errore** — misurato
+contro quello di subtxt, 98 voci. Quindi prima di usarla verifica che veda **questo** file:
+
+```bash
+python3 <script> --help | head -1        # sottocomandi: plan, archive[, harvest]
+python3 <script> plan --ledger <registro> | python3 -c '
+import json, sys
+e = json.load(sys.stdin)["entries"]
+print(len(e), "voci,", sum("source_spec:" in x["text"].split("\n", 1)[0] for x in e), "source_spec")'
+grep -cE '^[-*+] '               <registro>   # bullet in colonna 0
+grep -cE '^[-*+] +source_spec:'  <registro>   # di cui source_spec
+```
+
+Lo script **vede il file** se:
+
+- le `source_spec` che vede sono **almeno** quante ne conta `grep` (possono essere di più: su atala
+  18 contro 17);
+- le voci sono **poco sotto** i bullet — lo scarto sono bullet di prosa in sezioni che non sono
+  `## Deferred from:`: misurato 6 su 167 in lifehacker, 2 su 219 in atala. **Zero voci, o uno scarto
+  di decine, vuol dire che lo script non capisce la forma del file.**
+
+### Il verdetto, dichiarato
+
+| registro | script | vede il file | mondo |
+|---|---|---|---|
+| no / vuoto | — | — | **stop** — niente da fare |
+| sì | no | — | **B** |
+| sì | sì | sì | **A** |
+| sì | sì | no | **stop** — dichiara i numeri |
+
+Nell'ultimo caso **non si ripiega sul mondo B**: in un repo con `auto-bmad` quel file ha un lettore,
+solo che ne gira una copia vecchia. Il rimedio è aggiornare lo script upstream, ed è una decisione
+dell'utente, non della skill.
+
+Prima di andare avanti **scrivi il verdetto in una riga**, sempre:
+
+```
+Mondo A — .claude/skills/auto-bmad/scripts/deferred_ledger.py (plan, archive; niente harvest)
+          vede 161 voci su 167 bullet, 8 source_spec su 8
+Mondo B — nessuno script: 98 voci, triage con marcatori italiani, senza archivio
+```
+
+Né l'archivio né `_bmad-output/` decidono il mondo: l'archivio (`deferred-work-resolved.md`) lo crea
+lo script al primo `archive`, e `_bmad-output/` c'è anche in subtxt, dove lo script no.
+
+### Il resto
+
 - **Il comando di verifica del repo** (`typecheck`, `lint`, `test`, `build`): serve al passo 6 per
   scrivere come si dimostra la non-regressione di ogni batch. ⚠️ **Escludi i test che girano su
   servizi veri** — un DB di produzione, un'API a pagamento: si nominano solo se il batch tocca
@@ -75,17 +149,37 @@ Se una di queste viene violata il comando ha fatto danno, non lavoro.
 
 ## Precondizioni (hard-stop)
 
-- **Working tree pulito** — il comando scrive due file e ne archivia un terzo.
-- **Nessuna pipeline in volo** (`_bmad-output/auto-bmad/state/*.yaml` senza run attivi):
-  scriverebbe sul registro sotto di noi e il controllo sha fallirebbe a metà.
-- **Il registro esiste e non è vuoto.**
+**In entrambi i mondi:**
+
+- **Working tree pulito** — la skill scrive almeno due file.
+
+**Solo nel mondo A:**
+
+- **Nessuna pipeline in volo** — scriverebbe sul registro sotto di noi.
+
+  ⚠️ **`status: in-progress` negli state non è il segnale.** Resta scritto quando un run viene
+  abbandonato: misurato il 2026-09-28, 27 state `in-progress` in atala e 4 in lifehacker, fermi da
+  settimane. Presa alla lettera la precondizione fermerebbe la skill sempre. Il segnale è
+  un'attività **recente**:
+
+  ```bash
+  find _bmad-output/auto-bmad/state -name '*.yaml' -mmin -120
+  ```
+
+  Se esce qualcosa, **chiedi** se c'è un run aperto in un'altra sessione. Il controllo sha del passo
+  5 resta comunque la rete vera: se qualcuno scrive nel frattempo, `archive` rifiuta.
+
+Nel mondo B non ce n'è una equivalente. Una code review aperta in un'altra sessione può appendere
+voci mentre lavori: finiscono in fondo, non toccano le tue modifiche, e le prende il giro dopo.
 
 ---
 
 ## 1 — Leggi il registro
 
+**Mondo A:**
+
 ```bash
-python3 <script-rilevato-al-passo-0> plan --ledger <registro>
+python3 <script> plan --ledger <registro>
 ```
 
 Sola lettura. Restituisce ogni voce con un `id` stabile, il testo, l'intestazione di provenienza, il
@@ -97,18 +191,24 @@ Sola lettura. Restituisce ogni voce con un `id` stabile, il testo, l'intestazion
 **Tieni da parte il `ledger_sha256`**: serve al passo 5, e la sua scadenza è la prova che nessuno ha
 scritto sul file nel frattempo.
 
+**Mondo B:** leggi il file direttamente. Una voce è un bullet in colonna 0 con tutto ciò che è
+indentato sotto, fino al bullet successivo. Non ci sono `id` né hint — e un hint lì direbbe `open`
+per tutte, perché nessuna è mai stata marcata. Chiama le voci per `source_spec` più le prime parole
+del `summary`, **non per numero di riga**: le righe che aggiungi al passo 3 spostano quelle sotto.
+
 ## 2 — Riconcilia contro il codice
 
 È il passo che costa, ed è l'unico che nessuno script può fare.
 
-**Salta subito** ogni voce che porta già `[NON-LAVORO: …]`: è stata triata in un giro precedente e
-per costruzione nessuna modifica al codice può chiuderla. È il motivo per cui quell'etichetta
-esiste.
+**Salta subito** ogni voce già marcata come non-lavoro in un giro precedente (passo 4, nella forma
+del suo mondo): per costruzione nessuna modifica al codice può chiuderla. È il motivo per cui quel
+marcatore esiste.
 
 Per ogni voce restante — non marcata, oppure marcata ma con un residuo aperto — **apri i file che
-nomina** (i riferimenti `[path:riga]`) e guarda se il difetto c'è ancora. Non fermarti alla
-descrizione: le voci invecchiano nei numeri (una che diceva 853 righe oggi ne ha 864) e capita che
-il fix sia atterrato da un altro ramo **lo stesso giorno** in cui la review la registrava.
+nomina** (i riferimenti `[path:riga]`, o `file.py:871` nell'`evidence`) e guarda se il difetto c'è
+ancora. Non fermarti alla descrizione: le voci invecchiano nei numeri (una che diceva 853 righe oggi
+ne ha 864) e capita che il fix sia atterrato da un altro ramo **lo stesso giorno** in cui la review
+la registrava.
 
 ⚠️ **Mai `grep` semplice.** Un file sorgente con un NUL dentro viene dichiarato binario da GNU grep,
 che **non stampa nulla, in silenzio**. Usa `git grep` (annusa solo i primi ~8000 byte) oppure
@@ -119,9 +219,12 @@ giorno dopo. Altrove il file col NUL può non esistere, ma la regola costa zero.
 Verifica anche i **numeri** citati (conteggi di righe, soglie): correggili citando **la soglia
 superata**, non il valore — «sopra il tetto di 800», non «a 853», che invecchia al primo commit.
 
-## 3 — Normalizza i marcatori
+## 3 — Marca le voci chiuse
 
-Solo sulle voci che il passo 2 ha confermato. Due forme, e la seconda è quella che evita un danno.
+Solo sulle voci che il passo 2 ha confermato. In entrambi i mondi le forme sono due — voce finita
+tutta, voce finita in parte — e la seconda è quella che evita un danno.
+
+### Mondo A — la grammatica dello script
 
 **Voce interamente finita** — vocabolario prescritto dal reconcile di BMAD, da usare alla lettera:
 
@@ -150,9 +253,41 @@ attiva. Una voce che apre con `✅ CHIUSA` e dice `RESTA APERTA` tre righe sotto
 **`resolved`**, archiviata, e il lavoro ancora aperto sparisce — il guasto esatto che la regola 2
 esiste per impedire.
 
+### Mondo B — una riga in coda alla voce
+
+Senza parser il marcatore non è un contratto con nessuno: deve solo essere **lo stesso a ogni giro**,
+perché il giro dopo lo riconosca. Una riga `esito:`, **aggiunta** in coda alla voce, alla stessa
+indentazione di `summary:` — dopo l'ultima riga della voce, non dentro il blocco di `evidence`:
+
+```markdown
+- source_spec: `spec-1-7-smoke-test-pywebview-windows.md`
+  summary: …
+  evidence: >-
+    …
+  esito: chiusa <data> — <file/commit/story> — <cosa è cambiato>
+```
+
+Finita solo in parte:
+
+```markdown
+  esito: aperta in parte <data> — fatto: <…>; resta: <…>
+```
+
+Una voce in prosa libera, senza campi, riceve la stessa riga come sotto-bullet: `  - esito: …`.
+
+**Niente spunta, niente parole inglesi, niente riscrittura della voce.** Non è solo una questione di
+lingua: se un giorno arrivasse `auto-bmad`, il suo script cerca `resolved`/`closed` e una spunta in
+testa. `chiusa` non li attiva, quindi quelle voci risulterebbero `open` — un falso negativo, che
+costa una rilettura. Un marcatore inglese messo qui senza la regola del `(remainder)` sarebbe invece
+archiviato alla cieca.
+
 ## 4 — Marca il non-lavoro
 
-Una sola etichetta, in testa al testo del bullet dopo il titolo:
+Va a ciò che **non può essere chiuso scrivendo codice**: domande aperte verso terzi, decisioni di
+prodotto che aspettano una persona, limiti dichiarati, note di processo, finding pinnati da test
+anti-marcita.
+
+**Mondo A** — una sola etichetta, in testa al testo del bullet dopo il titolo:
 
 ```markdown
 - **[Med] [NON-LAVORO: decisione in sospeso] <titolo>** — …
@@ -160,27 +295,30 @@ Una sola etichetta, in testa al testo del bullet dopo il titolo:
 - **[Low] [NON-LAVORO: verifica in dry-run — runbook §4] <titolo>** — …
 ```
 
-Va messa a ciò che **non può essere chiuso scrivendo codice**: domande aperte verso terzi, decisioni
-di prodotto che aspettano una persona, limiti dichiarati, note di processo, finding pinnati da test
-anti-marcita.
+**Mondo B** — la stessa riga del passo 3:
+
+```markdown
+  esito: non-lavoro — decisione in sospeso: <quale, e chi la prende>
+```
 
 **Se il repo ha un registro dedicato per una famiglia di rinvii** — per esempio tutto ciò che si
-attiva solo a una svolta futura — l'etichetta ci **rimanda** invece di duplicarne il contenuto:
+attiva solo a una svolta futura — il marcatore ci **rimanda** invece di duplicarne il contenuto:
 `[NON-LAVORO: attivo col SaaS — vedi saas-readiness-ledger]`.
 
-**Due lettori, due benefici.** Il prossimo giro di questo comando le salta (passo 2). E l'agente di
-`create-story` — che riceve il registro iniettato come prosa, con l'istruzione di pescare i rinvii
-che toccano la sua story — legge «non è lavoro» invece di provare a sistemarla: senza etichetta può
-allargare una costante che in realtà è una domanda aperta.
+**Chi lo legge.** In entrambi i mondi il prossimo giro di questa skill (passo 2), che la salta. Nel
+mondo A anche l'agente di `create-story` — che riceve il registro iniettato come prosa, con
+l'istruzione di pescare i rinvii che toccano la sua story — e legge «non è lavoro» invece di provare
+a sistemarla: senza etichetta può allargare una costante che in realtà è una domanda aperta.
 
-⚠️ **Le gravità `[Med]`/`[Low]` NON si toccano.** Le scrive la macchina: il delegate di code review
-copia ogni finding rinviato nel registro con la sua gravità attaccata. Cancellarle significa
-ricancellarle a ogni giro, per sempre, per niente. Nessuno script le legge — sono prosa inerte.
+⚠️ **Le gravità `[Med]`/`[Low]`, dove ci sono, NON si toccano.** Le scrive la macchina: il delegate
+di code review copia ogni finding rinviato nel registro con la sua gravità attaccata. Cancellarle
+significa ricancellarle a ogni giro, per sempre, per niente. Nessuno script le legge — sono prosa
+inerte.
 
 ⚠️ **`[INNESCO: …]` non va nel registro.** La condizione che fa maturare un lavoro («quando un CSV
 supera le ~2000 righe») serve a chi decide, e chi decide legge il piano. Va nel piano, passo 6.
 
-## 5 — Archivia
+## 5 — Archivia (solo mondo A)
 
 Solo le voci che il passo 2 ha confermato **interamente** finite e che il passo 3 ha marcato.
 
@@ -201,18 +339,23 @@ ancora qualcosa di aperto, **non la si archivia**: si marca il residuo (passo 3)
 (passo 4). Caso reale: una voce con la decisione presa ma anche un *«si scioglie al primo invio
 monitorato»* — la decisione è chiusa, la verifica no.
 
+**Mondo B: non si archivia.** Le voci chiuse restano al loro posto con il loro `esito:`. L'archivio
+esiste in `auto-bmad` per tenere piccolo il file che il suo script ri-parsifica: senza parser non c'è
+niente da proteggere, e spostare voci contraddice l'istruzione di BMAD. Il costo — il file cresce —
+lo assorbe il piano, che parla solo delle aperte.
+
 ## 6 — Riscrivi il piano
 
-File fisso, **sempre lo stesso**, sovrascritto per intero — di norma
-`_bmad-output/implementation-artifacts/deferred-plan.md`.
+File fisso, **sempre lo stesso**, sovrascritto per intero — di norma `deferred-plan.md` accanto al
+registro.
 
 Un piano vecchio letto per sbaglio è peggio di nessun piano: niente file datati, niente storico. Lo
 storico è la history di git.
 
 Contenuto, in quest'ordine:
 
-1. **Data del giro** e una riga di esito: quante voci verificate, quante chiuse, quante archiviate,
-   quante marcate non-lavoro, quante restano.
+1. **Data del giro, mondo** e una riga di esito: quante voci verificate, quante chiuse, quante
+   archiviate (solo A), quante marcate non-lavoro, quante restano.
 2. **Cosa è cambiato dal giro precedente** — voci nuove arrivate dalle review, voci chiuse,
    riclassificazioni. È la parte che si legge per prima.
 3. **I batch da fare adesso.** Un batch = un branch = una PR. Per ognuno: nome del branch, le voci
@@ -281,7 +424,11 @@ basta.
 
 ## Trappole note
 
-**Il `marker_hint` sbaglia in due direzioni.** Verificato su `classify_hint`:
+**Lo script vecchio su un registro senza intestazioni restituisce zero voci, e non protesta.** È il
+caso che il controllo del passo 0 esiste per prendere: senza quel controllo il giro finirebbe con
+«nessuna voce da triare» su un file che ne ha 98.
+
+**Il `marker_hint` sbaglia in due direzioni** (mondo A). Verificato su `classify_hint`:
 
 | Voce | Hint | Realtà |
 |---|---|---|
@@ -296,8 +443,9 @@ regola del passo 3.
 
 **Le voci vivono in sezioni per *origine*, non per *oggetto*.** Lo stesso difetto può comparire in
 tre sezioni diverse (la review della story, quella dell'epic, l'aggiornamento di una story
-successiva). Prima di pianificare un batch, raggruppa per **file**, non per sezione — o lo stesso
-lavoro finisce in due branch.
+successiva) — o, nel mondo B, in tre voci con la stessa `source_spec` e `summary` diversi. Prima di
+pianificare un batch, raggruppa per **file**, non per sezione — o lo stesso lavoro finisce in due
+branch.
 
 **Attenzione ai numeri di epic che collidono.** Se il repo ha due track con numerazioni
 indipendenti, «epic N» è ambiguo: stabilisci **quale** track prima di agire — lo sprint file

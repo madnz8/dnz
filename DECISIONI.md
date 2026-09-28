@@ -39,7 +39,7 @@ sono compatibili con questo principio.
 |---|---|---|
 | `merge` | ✅ 2026-09-16 | push del default e cleanup del branch rimossi |
 | `release` | ✅ 2026-09-16 | assorbe le 2 varianti; pusha, pulisce i branch, §4b sulle Novità |
-| `deferred` | ✅ 2026-09-22 | convergono; unica skill non universale — richiede un registro su disco |
+| `deferred` | ✅ 2026-09-28 | due mondi: con lo script di auto-bmad lo guida, senza fa il triage sul posto |
 | `squash-story` | ✅ 2026-09-16 | criterio unificato sull'appartenenza; provenienza opzionale |
 | `ui-check` | ✅ 2026-09-22 | sale; il §1 era conoscenza di macchina, non di repo |
 | `audit` | ✅ 2026-09-22 | sale; metodologia separata dai fatti di lifehacker |
@@ -572,6 +572,52 @@ vanno separate — "il registro esiste" non implica "esiste qualcosa che lo sa l
 questo che oggi in subtxt la skill parte verso il nulla. E la skill deve dichiarare **quale copia
 dello strumento ha trovato e cosa sa fare**.
 
+### 2026-09-28 — `deferred`: il §0 decide il mondo, e lo dichiara
+
+Fatto il punto rimasto aperto qui sopra. Il §0 ora risponde a due domande in ordine — **c'è un
+registro?** e **c'è qualcosa che lo sa leggere?** — e da lì esce un verdetto fra quattro: stop
+(niente registro), **mondo B** (registro senza script), **mondo A** (script che vede il file), stop
+(script che non lo vede). Il verdetto si scrive in una riga prima di toccare niente.
+
+**Correzione di quanto scritto sopra.** *"Il rischio di perdita dati non c'e' … e' degrado, non
+corruzione"* vale per lifehacker, non in generale. Misurato oggi con lo script di lifehacker sul
+registro di subtxt, che non ha intestazioni `## Deferred from:`: **0 voci su 98, codice di uscita 0,
+nessun errore.** Per quello script un bullet `source_spec` fuori da un'intestazione è prosa. In
+lifehacker non si vede solo perche' le sue 8 voci `source_spec` stanno sotto un'intestazione. Non e'
+corruzione — `plan` non scrive — ma e' il `"moved": 0` di nuovo: un passo che tace.
+
+Quindi **"ho trovato lo script" non basta**, e nemmeno `--help`: la prova e' un conteggio. `plan`
+contro `grep` sul file, voci totali e voci `source_spec`. Criterio, tarato sui tre registri reali:
+`source_spec` viste **almeno** quante `grep` (atala: 18 contro 17, il parser ne vede una che la regex
+semplice no); voci **poco sotto** i bullet (6 su 167 in lifehacker, 2 su 219 in atala — bullet di
+prosa in sezioni come `## Notes`). Zero, o uno scarto di decine, vuol dire che lo script non capisce
+la forma.
+
+**Script che non vede il file → stop, non ripiego sul mondo B.** In quel repo il file un lettore ce
+l'ha; il rimedio e' aggiornare lo script upstream, decisione dell'utente.
+
+**La precondizione "nessuna pipeline in volo" era inservibile.** Diceva *state senza run attivi*, ma
+`status: in-progress` resta scritto quando un run si abbandona: oggi 27 in atala e 4 in lifehacker,
+fermi da settimane. Presa alla lettera avrebbe fermato la skill sempre — o, piu' probabilmente, veniva
+ignorata. Ora il segnale e' la **modifica recente** (`find … -mmin -120`), e se c'e' si chiede. La rete
+vera resta `--expect-sha`. Nel mondo B la precondizione non esiste: non ci sono state.
+
+**Il marcatore del mondo B e' una riga `esito:`** aggiunta in coda alla voce, all'indentazione dei
+campi — `chiusa`, `aperta in parte`, `non-lavoro`. Scelta perche' e' il gesto piu' piccolo che la
+regola di BMAD (*"Do not modify existing entries"*) tollera: si aggiunge una riga, non si tocca
+quello che c'e'. Verificato che lo script nuovo la tiene dentro la voce giusta e non cambia il
+conteggio. **L'italiano qui e' anche la scelta sicura, non solo quella libera:** se un giorno arriva
+auto-bmad, `chiusa` non attiva `RESOLUTION_RE` e la voce risulta `open` — falso negativo, costa una
+rilettura. Una parola inglese scritta senza la disciplina del `(remainder)` verrebbe archiviata alla
+cieca.
+
+**Rilevamento:** `git ls-files -co --exclude-standard`, non `find` — salta `node_modules` e simili
+senza doverli elencare. Verificato che trova lo script in atala e lifehacker, dove `.claude/skills/`
+non e' ignorato. Se un repo ignorasse `auto-bmad`, finirebbe nel mondo B per errore: da tenere a
+mente, oggi non capita.
+
+Versione del plugin **2.1.0**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato
@@ -579,8 +625,8 @@ su `github.com/madnz8/dnz` (privato) e installato in `~/admin` con **scope=proje
 
 **Aperto, in ordine di dipendenza:**
 
-1. **`deferred`, punto 2** — il §0 che distingue i due mondi, le precondizioni separate, la skill che
-   dichiara quale strumento ha trovato. Deciso, non iniziato.
+1. ~~**`deferred`, punto 2**~~ — **fatto il 2026-09-28**, vedi la decisione omonima. Resta da
+   provarla davvero: un giro vero in subtxt (mondo B) è il primo uso della forma `esito:`.
 2. **Le copie vecchie nei repo** — atala (5), lifehacker (4), lead-generation (1), trasformazione (1),
    piu' le 3 a livello utente. I prompt sono in `MIGRAZIONE.md` ma vanno allineati: parlano di
    "comandi" e non menzionano che ora arriva un plugin di skill.
