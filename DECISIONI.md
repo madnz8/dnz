@@ -618,6 +618,16 @@ mente, oggi non capita.
 
 Versione del plugin **2.1.0**.
 
+## 2026-10-02 — Versione 2.1.1 senza modifiche di comportamento
+
+Il rilascio contiene solo documentazione: `CLAUDE.md` (nuovo, istruzioni di lavoro del repo),
+`DECISIONI.md` e `MIGRAZIONE.md` allineati. La regola del repo dice che per la sola documentazione
+la versione non si alza; **la si alza lo stesso, per scelta dell'utente**, perché `/plugin update dnz`
+nei repo parte solo se la versione cambia, e `MIGRAZIONE.md` viaggia dentro il plugin. Nessun tag e
+nessun changelog: il repo non ne ha mai avuti, la storia è in questo file.
+
+Versione del plugin **2.1.1**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato
