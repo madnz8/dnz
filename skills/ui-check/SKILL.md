@@ -28,8 +28,9 @@ del codice — quello è `/code-review`. Qui l'unica domanda è **"cosa vede dav
 - **Esiste già una skill di progetto che copre l'avvio dell'app?** (una skill `run`, o qualcosa
   sotto `.claude/skills/`). Se c'è, **seguila** invece di reinventare i comandi.
 - **Il comando di avvio** — `CLAUDE.md`, `package.json`, `Makefile`. Non presumere `npm run dev`.
-- **Su quale porta**, e soprattutto **quali variabili d'ambiente dipendono dalla porta**: è la
-  trappola del passo 2.
+- **Su quale porta e su quale host** ascolta il server — guarda lo script vero, non solo il nome:
+  `next dev -H 127.0.0.1` ascolta sulla loopback IPv4, non su «localhost» — e soprattutto **quali
+  variabili d'ambiente dipendono da porta e host**: è la trappola del passo 2.
 - **Come ci si autentica** in sviluppo: c'è un dev-login? Lo dice il `CLAUDE.md`?
 - **La regola sui dati** del repo: da dove NON si prendono i dati di prova, e quali viste espongono
   dati di persone vere. Serve al passo 3.
@@ -84,12 +85,19 @@ posto sbagliato dopo il login e l'utente resta bloccato sulla pagina di accesso,
 silenzioso**. Avvia sovrascrivendo la variabile perché combaci con la porta scelta:
 
 ```bash
-AUTH_URL=http://localhost:<porta> AUTH_TRUST_HOST=true <comando-di-avvio>
+AUTH_URL=http://<host>:<porta> AUTH_TRUST_HOST=true <comando-di-avvio> -- -p <porta>
 ```
 
-Usa **lo stesso host** (`localhost` oppure `127.0.0.1`, mai mischiarli) sia nell'URL del browser sia
-nella variabile: sono due domini diversi agli occhi del cookie di sessione, e mischiarli produce lo
-stesso loop di redirect.
+**La porta va passata anche al comando di avvio**, non solo alla variabile: uno script `dev` di
+norma non ne fissa una, e una variabile che dice 3001 davanti a un server partito sulla 3000
+produce proprio il loop che si voleva evitare. Come si passa dipende dallo strumento (`-- -p <porta>`
+per `next dev` via npm, `--port` per Vite, `PORT=` per altri): verificalo nel banner di avvio, che
+stampa l'indirizzo vero.
+
+**`<host>` è quello su cui il server ascolta**, letto al passo 0 — non `localhost` per abitudine. Poi
+usa **lo stesso host** sia nell'URL del browser sia nella variabile (`localhost` e `127.0.0.1` sono
+due domini diversi agli occhi del cookie di sessione, e mischiarli produce lo stesso loop di
+redirect).
 
 Aspetta il banner "Ready" nel log prima di procedere, **non un tempo fisso a caso**.
 
