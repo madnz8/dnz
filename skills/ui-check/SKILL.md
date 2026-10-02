@@ -28,9 +28,9 @@ del codice — quello è `/code-review`. Qui l'unica domanda è **"cosa vede dav
 - **Esiste già una skill di progetto che copre l'avvio dell'app?** (una skill `run`, o qualcosa
   sotto `.claude/skills/`). Se c'è, **seguila** invece di reinventare i comandi.
 - **Il comando di avvio** — `CLAUDE.md`, `package.json`, `Makefile`. Non presumere `npm run dev`.
-- **Su quale porta e su quale host** ascolta il server — guarda lo script vero, non solo il nome:
-  `next dev -H 127.0.0.1` ascolta sulla loopback IPv4, non su «localhost» — e soprattutto **quali
-  variabili d'ambiente dipendono da porta e host**: è la trappola del passo 2.
+- **Su quale porta** parte il server — guarda lo script vero, non solo il nome: uno script `dev` di
+  norma non ne fissa una — e soprattutto **quali variabili d'ambiente dipendono da porta e host**: è
+  la trappola del passo 2. Se il `CLAUDE.md` dice quale host usare, vale quello.
 - **Come ci si autentica** in sviluppo: c'è un dev-login? Lo dice il `CLAUDE.md`?
 - **La regola sui dati** del repo: da dove NON si prendono i dati di prova, e quali viste espongono
   dati di persone vere. Serve al passo 3.
@@ -94,10 +94,12 @@ produce proprio il loop che si voleva evitare. Come si passa dipende dallo strum
 per `next dev` via npm, `--port` per Vite, `PORT=` per altri): verificalo nel banner di avvio, che
 stampa l'indirizzo vero.
 
-**`<host>` è quello su cui il server ascolta**, letto al passo 0 — non `localhost` per abitudine. Poi
-usa **lo stesso host** sia nell'URL del browser sia nella variabile (`localhost` e `127.0.0.1` sono
+**Usa lo stesso host** sia nell'URL del browser sia nella variabile: `localhost` e `127.0.0.1` sono
 due domini diversi agli occhi del cookie di sessione, e mischiarli produce lo stesso loop di
-redirect).
+redirect. Nel dubbio `localhost`, **anche se il banner stampa `127.0.0.1`**: misurato su
+atala-portal (`next dev -H 127.0.0.1`), con `127.0.0.1` in entrambi il login riesce ma il redirect
+che lo segue atterra su `localhost`, senza sessione. **La prova è un login vero**: se dopo l'accesso
+l'URL ha cambiato host, l'host giusto è quello su cui sei atterrato.
 
 Aspetta il banner "Ready" nel log prima di procedere, **non un tempo fisso a caso**.
 
