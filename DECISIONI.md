@@ -628,8 +628,12 @@ su `github.com/madnz8/dnz` (privato) e installato in `~/admin` con **scope=proje
 1. ~~**`deferred`, punto 2**~~ — **fatto il 2026-09-28**, vedi la decisione omonima. Resta da
    provarla davvero: un giro vero in subtxt (mondo B) è il primo uso della forma `esito:`.
 2. **Le copie vecchie nei repo** — atala (5), lifehacker (4), lead-generation (1), trasformazione (1),
-   piu' le 3 a livello utente. I prompt sono in `MIGRAZIONE.md` ma vanno allineati: parlano di
-   "comandi" e non menzionano che ora arriva un plugin di skill.
+   piu' le 3 a livello utente. **`MIGRAZIONE.md` allineato il 2026-09-29** (skill invece di comandi,
+   v2.1.0, esito della prova su Claude web, e la regola sui fix di review di lifehacker, che era
+   rimasta quella rovesciata il 25/9). **I prompt non sono ancora stati eseguiti**: le copie vecchie
+   sono ancora tutte al loro posto. Da qui in avanti tocca all'utente incollarli, un repo per volta.
+   Ostacoli trovati dal censimento: `CLAUDE.md` di trasformazione ha una modifica non committata, e
+   lifehacker una cartella non tracciata in `_bmad-output/`.
 3. **`dnz-squash` in subtxt** — da ritirare, il suo metodo e' dentro `squash-story`.
 4. **Claude web** — scegliere fra le tre strade qui sopra, dopo aver provato quella del
    `settings.json`.

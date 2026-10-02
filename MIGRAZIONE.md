@@ -1,8 +1,13 @@
 # Migrazione dei repo alla fonte unica
 
-Le sette skill `/dnz:*` sono state consolidate in `~/workspace/dnz/commands/` a partire dalle 14
+Le sette skill `/dnz:*` sono state consolidate in `~/workspace/dnz/skills/` a partire dalle 14
 copie divergenti sparse su quattro repo e sul livello utente. Questo documento serve a portarle nei
-repo.
+repo: sono **prompt da incollare nella sessione di ciascun repo**, perché da qui gli altri repo si
+leggono ma non si scrivono.
+
+Censimento aggiornato al 2026-09-29: le copie vecchie sono ancora tutte al loro posto (atala 5,
+lifehacker 4, lead-generation 1, trasformazione 1, più le 3 a livello utente) e nessun prompt qui
+sotto è stato ancora eseguito.
 
 ## Come si installa
 
@@ -15,16 +20,16 @@ macchina:
 /plugin install dnz@dnz
 ```
 
-I sette comandi compaiono come `/dnz:merge`, `/dnz:release` e così via — gli stessi nomi di prima,
-quindi niente da reimparare. Gli aggiornamenti si prendono con `/plugin update dnz`.
+Le sette skill compaiono come `/dnz:merge`, `/dnz:release` e così via — gli stessi nomi di prima,
+quindi niente da reimparare (da `commands/` a `skills/` cambia il formato, non il nome). Gli
+aggiornamenti si prendono con `/plugin update dnz`.
 
 **Perché il marketplace e non una copia nei repo.** Perché così si installa su qualunque macchina
 con due righe, invece di dipendere da una cartella che esiste solo su rings. È anche l'unica forma
-che ha una versione: `1.0.0` oggi, e un `/plugin update` quando cambia.
+che ha una versione: `2.1.0` oggi, e un `/plugin update` quando cambia.
 
-> ⚠️ **Da verificare:** se una sessione di **Claude web** veda i plugin installati. Se non li
-> vedesse, lì i comandi non comparirebbero e servirebbe un secondo canale — ma non ne costruiamo uno
-> per un dubbio: si prova e si vede.
+> ⚠️ **Claude web non vede i plugin** (provato il 2026-09-28). Il plugin copre le macchine, non il
+> web: come arrivarci è un punto aperto in `DECISIONI.md`, e **non cambia niente per questi prompt**.
 
 ## Cosa resta da fare nei repo
 
@@ -34,8 +39,14 @@ senza accorgertene.
 
 Quindi in ogni repo servono due cose:
 
-1. **Togliere le copie vecchie.**
+1. **Togliere le copie vecchie.** Prima verifica con `/plugin` che `dnz` sia installato *in quel
+   repo*: togliere le copie senza plugin lascia il repo senza comandi.
 2. **Salvare nel `CLAUDE.md` i fatti del progetto che le versioni consolidate non contengono più.**
+
+Verificato il 2026-09-29: quasi nessuno di quei fatti è già nei `CLAUDE.md` (in atala mancano
+`AUTH_URL`, la trappola di `CHANGELOG.md` e i byte NUL; in lifehacker `RISOLTO` e
+`saas-readiness`; in trasformazione `CHANGELOG-NOVITA` e `release:apply`), quindi i prompt sotto
+restano necessari. Le eccezioni sono segnalate nel prompt del repo.
 
 Il secondo punto è quello che conta. Le skill nuove sono generiche: i fatti del singolo repo sono
 stati tolti e sostituiti da un passo "orientati" che li rileva. **Se quei fatti non sono scritti da
@@ -98,9 +109,14 @@ Aveva 5 comandi: `deferred`, `merge`, `release`, `squash-story`, `ui-check`. Ne 
 >   renderizza un titolo vuoto.** Se non regge, è una modifica a `scripts/lib/changelog.ts` e al
 >   componente, da fare qui.
 >
-> **4.** Un commit solo, e la PR se serve. ⚠️ Il `CLAUDE.md` cita
-> `.claude/commands/dnz/squash-story.md` come percorso: **quel percorso non esisterà più**, va
-> sostituito con il solo nome del comando, `/dnz:squash-story`.
+> **4.** Un commit solo, e la PR se serve. ⚠️ Il `CLAUDE.md` cita due percorsi di copie che non
+> esisteranno più: `.claude/commands/dnz/merge.md` (riga 278) e
+> `.claude/commands/dnz/squash-story.md` (riga 286). Vanno sostituiti con il solo nome del comando,
+> `/dnz:merge` e `/dnz:squash-story`.
+>
+> **5.** Il registro dei rinvii è del **mondo A** (c'è `auto-bmad` con `deferred_ledger.py`). Il §0
+> di `deferred` lo verifica con un conteggio prima di agire: se dice che lo script non vede il file,
+> non è un guasto della skill, è la risposta giusta — riferiscilo, non aggirarlo.
 
 ---
 
@@ -145,13 +161,23 @@ Aveva 4 comandi: `audit`, `deferred`, `release`, `squash-story`. Ne riceve 7.
 > - **Il piano è uno solo.** `audit` non scrive più una propria sezione "interventi": rimanda al
 >   piano che `/dnz:deferred` ha appena riscritto, e tiene solo i finding che quel piano non può
 >   sapere. Se hai report vecchi con due piani, il piano dei rinvii è quello buono.
-> - **`squash-story`: i fix di review restano fuori dai commit di story** e si collassano fra loro in
->   uno o due commit — era già la regola di questo repo, ora è quella comune. La provenienza è
->   opzionale: se non c'è né story né ticket né epica, si omette la parentesi e non ci si ferma a
->   chiedere.
+> - **`squash-story` cambia metodo, e cambia rispetto alla regola di questo repo.** Non aggrega più i
+>   commit esistenti con un rebase: fa `git reset --mixed <base>` e **ricostruisce l'albero finale**
+>   committando gruppi di file. I fix di review scritti prima del merge **non sono più commit a
+>   sé**: finiscono nel commit di story a cui appartengono, perché una correzione fatta prima del
+>   merge non è mai esistita nel prodotto. La vecchia regola («i fix a mano dopo la chiusura non si
+>   fondono mai») è stata rovesciata il 2026-09-25; il perché è in `DECISIONI.md`. Se il `CLAUDE.md`
+>   la ripete, va aggiornato. La provenienza è opzionale: se non c'è né story né ticket né epica, si
+>   omette la parentesi e non ci si ferma a chiedere.
+> - **`deferred` è del mondo A, ma con lo script più corto.** `deferred_ledger.py` qui è di 963
+>   righe contro le 1761 di atala e **non capisce le voci `source_spec`**. Le tue 8 stanno sotto
+>   un'intestazione `## Deferred from:`, quindi il conteggio del §0 torna e la skill parte. Non
+>   aggiornare lo script per questo: è una decisione a parte, dell'utente.
 > - **Nessuna rinomina di branch**: era stata proposta e poi tolta.
 >
-> **4.** Branch + PR, un commit solo.
+> **4.** Branch + PR, un commit solo. `git status` mostra una cartella non tracciata,
+> `_bmad-output/planning-artifacts/briefs/brief-lifehacker-2026-09-15/`: non è di questa migrazione,
+> quindi `git add` solo dei percorsi toccati, mai `-A`.
 
 ---
 
@@ -166,9 +192,10 @@ Aveva solo `release`. Ne riceve 7.
 >
 > **2.** ⚠️ **Qui c'è una cosa da scoprire, non da ricopiare.** La copia vecchia di `dnz:release` era
 > la versione generica, identica a quella di altri repo, e questo repo **non ha uno
-> `scripts/release-apply.ts`**: quindi qual è davvero la meccanica di release non è scritto da
-> nessuna parte. Il `CLAUDE.md` alla riga 235 dice che il rilascio si fa con `/dnz:release` e che il
-> campo `version` di `package.json` segue il tag, ma non dice **con quale comando**.
+> `scripts/release-apply.ts`**. Il `CLAUDE.md` alle righe 234-235 dice già che il meccanismo è
+> **manuale** (niente release-it, semantic-release o conventional-commits), guidato dall'agente via
+> `/dnz:release`, e che il campo `version` di `package.json` segue il tag (oggi `0.9.0`, ultimo tag
+> `v0.9.0`). Manca la **procedura**: quali file si toccano, in che ordine, cosa fa da gate.
 >
 > Guarda `package.json` → `scripts`, i file di configurazione (`.release-it.json`, `.changeset/`,
 > `.versionrc`), l'ultima voce di `CHANGELOG.md` e `git tag --list | tail -5`. Poi **scrivi nel
@@ -223,7 +250,9 @@ Aveva solo `release`. Ne riceve 7.
 > Categorie ridotte a tre: `Nuovo` / `Migliorato` / `Corretto`. E quando non resta niente da dire, la
 > versione compare comunque nell'elenco con numero e data, senza titolo e senza voci.
 >
-> **4.** Un commit solo.
+> **4.** Un commit solo. ⚠️ Il `CLAUDE.md` di questo repo ha **già una modifica non committata** (una
+> riga, `git diff CLAUDE.md`): non è di questa migrazione. Guardala prima, chiedi all'utente se va
+> dentro o fuori, e non farla finire per sbaglio nel commit.
 
 ---
 
@@ -234,4 +263,12 @@ Dopo il sync dei repo **vanno tolte**: sono le uniche copie che non hanno né un
 history, e se restano continueranno a vincere nei repo che non hanno una copia propria — mostrando
 la versione vecchia senza dirlo.
 
-Si fa da una sessione su `~/admin`, non da qui.
+Stanno fuori da ogni repo, quindi non c'è un prompt da incollare: la cancellazione si fa una volta
+sola, con l'utente presente, dopo che i quattro repo sopra sono migrati.
+
+## subtxt
+
+Non ha un prompt qui. La sua copia vecchia è `dnz-squash`, una **skill** in
+`.claude/skills/dnz-squash/` (non in `commands/`: per questo il primo censimento l'aveva mancata), e
+il suo ritiro è il punto 3 degli aperti in `DECISIONI.md`. Subtxt è anche il «mondo B» di
+`deferred`, dove non è ancora stato fatto un giro vero.

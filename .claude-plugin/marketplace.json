@@ -12,7 +12,7 @@
       "name": "dnz",
       "source": "./",
       "description": "Sette comandi per chiudere il lavoro su un repo: squash della history, merge, release con changelog e pulizia dei branch, triage dei rinvii, audit periodico, verifica visiva della UI e diario di bordo. Scritti per rilevare le convenzioni del repo invece di presumerle.",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "author": {
         "name": "Daniele Bolletta",
         "email": "daniele.bolletta@gmail.com"
