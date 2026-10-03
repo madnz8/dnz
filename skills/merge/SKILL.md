@@ -103,6 +103,29 @@ e può dire la cosa giusta indipendentemente da come si chiamava il ramo.
 A questo punto il branch di default **locale** è avanti, ma non ancora pushato. Resta così fino al
 passo 4, dove si decide insieme cosa farne.
 
+### Il tag di salvataggio di `/dnz:squash-story`, se c'è
+
+Se il branch è passato da `/dnz:squash-story`, in locale c'è un tag `pre-collassamento-*` con i vecchi
+commit. È servito a poter tornare indietro, e ora il lavoro è dentro il default: **si toglie qui**,
+invece di lasciarlo a chi si ricorda. Salta senza rumore se non ce ne sono.
+
+Si cancella solo ciò che si è verificato: il tag va via se il suo **albero** compare nella history del
+default, cioè se quel contenuto è arrivato davvero. Altrimenti resta, e lo dici.
+
+```bash
+for T in $(git tag --list 'pre-collassamento-*'); do
+  if git log --format=%T HEAD | grep -qx "$(git rev-parse "$T^{tree}")"; then
+    git tag -d "$T"
+  else
+    echo "tengo $T: il suo contenuto non è nel default"
+  fi
+done
+```
+
+Annullare il merge resta possibile: i vecchi commit restano nel reflog per circa 90 giorni, ma
+tornarci è meno comodo che con il tag. Se vuoi tenerlo fino al push, dillo prima di lanciare la
+skill.
+
 ## 3 — Chiusura del ticket *(solo se ce n'è uno)*
 
 Salta questo passo senza rumore se al passo 0 non hai trovato né tracker né ticket.

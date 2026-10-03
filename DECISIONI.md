@@ -628,6 +628,48 @@ nessun changelog: il repo non ne ha mai avuti, la storia è in questo file.
 
 Versione del plugin **2.1.1**.
 
+## 2026-10-03 — `squash-story`: dal primo uso vero, due ritocchi
+
+Feedback di un agente che ha collassato un branch di 26 commit su Windows. Il metodo regge: l'agente
+stesso nota che un `rebase -i` con fixup avrebbe lasciato i fix di review visibili come correzioni, che
+è ciò che la skill vuole togliere. Dividere tre file per hunk è il prezzo del metodo, già scelto il
+25/9, e la skill dice come farlo. Restano due ritocchi, uno di comportamento e uno di sola documentazione.
+
+**Branch già per argomento: la skill si ferma.** Il §1 ha ora un criterio che prima non c'era: la
+precondizione dice «almeno tre commit», ma conta e basta. Se ogni commit è già una parte di lavoro, ha il
+messaggio nel formato del repo e nessuno è una correzione o un subject di impalcatura, il raggruppamento
+proposto coincide con quello esistente: stesso albero, SHA nuovi, e in cambio tag, force-push, CI che
+riparte e PR riscritta. Si dice e ci si ferma; se l'utente vuole procedere, si procede. Il criterio usa
+gli stessi subject che `merge` §1 già cerca, così le due skill non divergono su cosa sia impalcatura.
+
+**`gh api` senza slash iniziale (§7).** Git Bash su Windows riscrive `/repos/…` come percorso di file e
+la chiamata fallisce. `gh` accetta `repos/…` ovunque, quindi non c'è un caso in cui lo slash serva. Nel
+§0 e nelle precondizioni la forma senza slash era già quella usata. Sola documentazione.
+
+**Non cambiato: la suite al §5.** L'agente la trova ridondante dopo il gate, che prova l'albero identico.
+Ma la suite risponde a un'altra domanda (il branch è sano com'è, prima che lo scopra la CI su una PR già
+riscritta) e il feedback è una sola esecuzione, con 8 rossi d'ambiente già noti. Si rivede con un
+secondo caso.
+
+**Il tag di salvataggio non lo toglie più chi se ne ricorda.** Secondo feedback: il §8 diceva
+«ricordalo» e il tag è rimasto finché qualcuno non ha chiesto. Ora lo toglie `merge`, in fondo al §2,
+subito dopo il merge; e `release` §8b lo toglie se è rimasto (chi sceglie «mi fermo», o mergia in altro
+modo). Due punti sono stati scelti dopo averne discusso:
+
+- **Momento: subito dopo il merge locale, non dopo il push.** Si era pensato al push, perché fino a lì
+  si può ancora annullare il merge e il tag è la scorciatoia. Il vantaggio è piccolo (i vecchi commit
+  restano nel reflog circa 90 giorni) e lascia scoperto il caso «mi fermo», cioè il problema di partenza.
+  Dall'utente: in alcuni repo non si fa release, ma quasi sempre. `release` resta la rete per i residui.
+- **Controllo: l'albero del tag compare nella history del default**
+  (`git log --format=%T | grep -x <albero>`), non `git diff <tag> HEAD`. Il diff vale solo se il merge è
+  lineare; il confronto fra alberi regge anche se il default è avanzato, e non richiede il nome del
+  branch, che nel tag non c'è. Se non compare, il tag resta e la skill lo dice.
+
+Non si cancella altro: i branch li gestiva già `release` §8, e una pulizia «di tutto» senza una regola
+sicura per ogni cosa rischia di togliere ciò che serviva.
+
+Versione del plugin **2.1.2**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato

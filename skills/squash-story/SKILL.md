@@ -111,6 +111,18 @@ stato attuale del default.
 Leggi anche i commit esistenti — non per aggregarli, ma perché i loro messaggi dicono **cosa
 intendeva fare** chi li ha scritti, e le decisioni prese in review vanno assorbite nei body nuovi.
 
+### Se i commit sono già i gruppi, non c'è niente da fare
+
+Il metodo serve a togliere le correzioni e l'impalcatura dalla history. Se ogni commit esistente è
+già una parte di lavoro per conto suo, ha un messaggio nel formato del repo e **nessuno** è una
+correzione, una review integrata o un subject di impalcatura (gli stessi che cerca `/dnz:merge` §1:
+`(iter N)`, `start … pipeline`), il raggruppamento che proporresti coincide con quello che c'è già.
+Collassare darebbe lo stesso albero con SHA nuovi, e in cambio costa tag, reset, force-push, CI che
+riparte e PR da riscrivere.
+
+**Dillo e fermati**: «i commit sono già per argomento, non guadagni niente», con il motivo in una
+riga. Se l'utente vuole procedere lo stesso, si procede.
+
 ## 2 — Proponi i gruppi, e fermati
 
 **È il passo che conta, ed è l'unica decisione che stai prendendo al posto dell'utente.**
@@ -278,7 +290,7 @@ gh pr list --head "$BR"
 > di aver aggiornato la PR. La REST API funziona:
 
 ```bash
-gh api --method PATCH /repos/<owner>/<repo>/pulls/<N> -F body=@<file> --jq '.number'
+gh api --method PATCH repos/<owner>/<repo>/pulls/<N> -F body=@<file> --jq '.number'   # senza slash iniziale: Git Bash su Windows lo riscrive come percorso di file
 ```
 
 Nel corpo: gli SHA nuovi, e una nota che dichiara il collasso e avverte che gli SHA nei report di
@@ -290,8 +302,9 @@ vivo — un `gh` che fallisce in silenzio ti lascia credere di aver fatto il lav
 ## 8 — Chiudi dicendo tre cose
 
 - **Come annullare**: `git reset --hard <il-tag>` e di nuovo `git push --force-with-lease`.
-- **Il tag va tolto** quando la PR è mergiata — è locale, quindi ricordalo: `git tag -d <il-tag>`.
-  Non toglierlo se un passo si è fermato a metà: lì è ancora l'undo che serve.
+- **Il tag lo toglie `/dnz:merge`**, subito dopo il merge, se il suo contenuto è arrivato nel default;
+  se resta, lo toglie `/dnz:release` §8. A mano (`git tag -d <il-tag>`) solo se non usi nessuna delle
+  due. Non toglierlo se un passo si è fermato a metà: lì è ancora l'undo che serve.
 - ⚠️ **La trappola del merge.** Se poi merge dalla UI di GitHub con **«Squash and merge»**, i commit
   raggruppati tornano a essere uno solo e **tutto questo lavoro si perde**. Serve «Merge commit» o
   «Rebase and merge» — oppure `/dnz:merge`, che fa `git merge --no-ff` in locale ed è esattamente il

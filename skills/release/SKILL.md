@@ -186,7 +186,24 @@ DEF=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's|^origin/||')
 tuo: rimuove puntatori a cose già sparite. Senza questo, la lista dei passi seguenti è una
 fotografia vecchia e proporrai di cancellare roba già cancellata.
 
-### 8b — I mergiati: sicuri, conferma unica
+### 8b — I tag di salvataggio e i mergiati: sicuri, conferma unica
+
+**Prima i tag `pre-collassamento-*`** di `/dnz:squash-story`, se ne sono rimasti: di solito li toglie
+già `/dnz:merge`, ma chi ha scelto «mi fermo» o ha mergiato in altro modo li ha ancora. Si tolgono
+se il loro albero compare nella history del default, altrimenti restano e lo dici. Vanno **prima dei
+branch**, e non servono né il nome del branch né che esista ancora.
+
+```bash
+for T in $(git tag --list 'pre-collassamento-*'); do
+  if git log --format=%T "$DEF" | grep -qx "$(git rev-parse "$T^{tree}")"; then
+    echo "$T"      # candidato: contenuto già nel default
+  fi
+done
+```
+
+Presentali insieme ai branch mergiati: **una sola conferma per tutto il gruppo**, poi `git tag -d`.
+
+**Poi i branch mergiati.**
 
 ```bash
 git branch --merged "$DEF"    | grep -vE "^\*|^ *$DEF\$"
@@ -264,7 +281,7 @@ un report.
 ## 9 — Dove ti lascia
 
 > «Rilasciata `vX.Y.Z` (`<n>` merge pubblicati). Cancellati `<n>` branch mergiati, `<n>` anche su
-> `origin`. Restano `<n>` branch non mergiati fermi da oltre 60 giorni: `<elenco>`.»
+> `origin`, e `<n>` tag di salvataggio dello squash. Restano `<n>` branch non mergiati fermi da oltre 60 giorni: `<elenco>`.»
 
 Se il repo ha un audit periodico o un triage dei rinvii, è questo il momento naturale per
 ricordarlo — dopo il rilascio, non prima: si audita ciò che è appena uscito. Se il repo non ce
