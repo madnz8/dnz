@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Rilascia ciò che è sul branch di default: pubblica i merge accumulati, changelog + bump + tag + push, poi ripulisce i branch morti."
+description: "Rilascia ciò che è sul branch di default: pubblica i merge accumulati, changelog + bump + tag + push (anche la prima release di un repo nuovo), poi ripulisce i branch morti."
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,8 @@ disable-model-invocation: true
 
 Rilascia quello che è **già** sul branch di default: changelog + bump di versione + tag + push.
 **Tutto eseguito dall'agente in locale, via terminale.** La parte cognitiva — decidere il bump e
-scrivere il changelog — la fa l'agente; la meccanica la fa lo strumento di release del repo.
+scrivere il changelog — la fa l'agente; la meccanica la fa lo strumento di release del repo, o la
+procedura di questa skill (§0b) quando il repo non ne ha ancora una.
 
 È anche **il punto in cui il lavoro diventa pubblico**: `/dnz:merge` non pusha, quindi il branch di
 default locale può essere avanti di più merge. Questa skill li pubblica. E, a rilascio fatto,
@@ -30,11 +31,51 @@ Non c'è una risposta universale. **Rileva, non presumere**, in quest'ordine:
    non come piace a te.
 5. **I tag** — `git tag --list | tail -5`: schema (`v1.2.3` o `1.2.3`) e da dove si riparte.
 
-**Se non trovi nessun meccanismo, fermati e dillo.** Non inventare un `npm version` che il repo non
-usa: un tag fuori schema o un bump scritto a mano sporcano una history che poi qualcuno dovrà
-disfare a mano.
+Da qui escono **tre casi**, e va detto all'utente quale è:
+
+1. **C'è uno strumento o una procedura scritta** (punti 1-3): si usa quella, e vince su tutto il resto.
+2. **Nessuno strumento, ma ci sono release passate** (tag, changelog): la procedura si **ricostruisce
+   da quelle** — stesso schema di tag, stessi file, stesso modo di alzare la versione — e si scrive in
+   due righe. Non è inventare: è seguire un precedente. Si conferma nell'anteprima del passo 5.
+3. **Niente di tutto questo**: nessuno strumento, nessun tag, nessun changelog. È la **prima release**
+   del repo, e si fa con la procedura del §0b.
+
+In nessun caso si inventa un `npm version` che il repo non usa: un tag fuori schema o un bump scritto
+a mano sporcano una history che poi qualcuno dovrà disfare a mano.
 
 Riassumi all'utente cosa hai trovato — due righe — prima di procedere.
+
+### 0b — La prima release di un repo nuovo
+
+Si sceglie lo schema qui, e si scrive nel repo, così dalla seconda volta il caso 1 lo trova da sé.
+
+- **La prima versione**, con una sola domanda: `v0.1.0` (non lo usa ancora nessuno) o `v1.0.0` (è già
+  in uso). La versione è **il tag**: senza `package.json` non c'è nessun altro file da alzare.
+- **Il changelog per gli utenti**, `CHANGELOG-NOVITA.md` nella radice, nel formato del §4b. Il
+  changelog tecnico **non** si crea.
+- **La sezione «Release» nel `CLAUDE.md` del repo** (se manca il file, si crea con quella sola
+  sezione), per dire come si rilascia qui:
+
+  ```markdown
+  ## Release
+  Si rilascia con `/dnz:release`. La versione è il tag annotato `vX.Y.Z` (SemVer), senza file di
+  versione. Le novità per gli utenti stanno in `CHANGELOG-NOVITA.md`, la più recente in alto. Se
+  arriva un `package.json` o uno strumento di release, aggiorna questa sezione.
+  ```
+
+- **I comandi**, dopo l'anteprima e la conferma del passo 5:
+
+  ```bash
+  git add CHANGELOG-NOVITA.md CLAUDE.md
+  git commit -m "docs: novità vX.Y.Z"          # nel formato dei messaggi del repo, se ne ha uno
+  git tag -a vX.Y.Z -m "vX.Y.Z"
+  git push origin <branch-di-default> --follow-tags
+  ```
+
+  ⚠️ **Mai `git push --tags`**: pubblicherebbe tutti i tag locali, compresi quelli di salvataggio di
+  `/dnz:squash-story`. `--follow-tags` manda solo il tag annotato appena creato.
+
+Il bump dalla seconda release in poi segue il §3.
 
 ## 1 — Precondizioni
 
@@ -90,6 +131,11 @@ Se il `CLAUDE.md` del repo dà criteri suoi, valgono quelli.
 Nel formato rilevato al passo 0: stesso file, stesse sezioni, stessa lingua, stesso livello di
 dettaglio dell'ultima voce.
 
+**Il changelog che questa skill dà per scontato è quello «Novità», per gli utenti** (4b): è l'unico che
+git non sa produrre. Quello tecnico (4a) si scrive **solo se il repo ce l'ha già o l'utente lo
+chiede**: la storia tecnica è già in git — i gruppi di `/dnz:squash-story`, i merge `--no-ff` che
+dicono cosa è atterrato, i tag — e un file che nessuno apre invecchia.
+
 ⚠️ **Se i changelog sono più d'uno** (tecnico e utente, oppure due lingue) vanno scritti **tutti**.
 Dimenticarne uno non fa fallire niente e non lo nota nessuno — fino al rilascio dopo, quando manca
 un pezzo di storia che ormai va ricostruito.
@@ -97,7 +143,7 @@ un pezzo di storia che ormai va ricostruito.
 Se lo strumento vuole un file di input, salvalo **fuori dal repo** (lo scratchpad di sessione), così
 non sporchi il working tree che il passo 1 ti ha chiesto di tenere pulito.
 
-### 4a — Il changelog tecnico
+### 4a — Il changelog tecnico, solo se esiste
 
 Racconta **cosa è cambiato**, non l'elenco dei commit. Il lettore è chi lavora al repo: la causa di
 un bug, il nome del modulo e il numero della issue qui ci stanno.
@@ -137,15 +183,44 @@ scriverci che non è cambiato niente.
 **Le categorie sono tre: `Nuovo`, `Migliorato`, `Corretto`.** Se nel file ne trovi altre, è drift
 accumulato: non aggiungerne, usa queste tre.
 
+**Il formato del file, quando il repo non ne ha uno** — `CHANGELOG-NOVITA.md` nella radice, la
+versione più recente in alto, nella lingua del repo (nel dubbio, italiano):
+
+```markdown
+# Novità
+
+Cosa è cambiato, in breve.
+
+---
+
+## [X.Y.Z] — AAAA-MM-GG
+
+### <titolo della versione>
+
+**Nuovo**
+- ...
+
+**Migliorato**
+- ...
+
+**Corretto**
+- ...
+```
+
+Le categorie vuote non compaiono. Una versione senza voci è solo `## [X.Y.Z] — AAAA-MM-GG`, senza
+titolo. Se il repo mostra le novità altrove (un file JSON che alimenta un popup, una pagina), il
+formato di quel posto vince: qui si fissa solo quello che manca.
+
 ## 5 — Anteprima, poi chiedi
 
 Se lo strumento ha una modalità a vuoto (`--dry-run`, `--no-git`), **usala**: mostra all'utente bump
 + changelog + **i merge del passo 2 che stanno per essere pubblicati**, e **attendi conferma
-esplicita**. È l'ultimo punto di controllo — dopo si scrive e si pusha.
+esplicita**. Senza strumento (§0b o procedura ricostruita) l'anteprima è: il file di changelog come
+è scritto, il nome del tag, il commit e il push che seguiranno. È l'ultimo punto di controllo — dopo si scrive e si pusha.
 
 ## 6 — Applica
 
-Lancia il comando rilevato al passo 0.
+Lancia il comando rilevato al passo 0, o i comandi del §0b.
 
 > ⚠️ Questo passo **pusha sul branch di default**, e con esso tutti i merge accumulati in locale. In
 > molti repo quel push fa partire un deploy: se il `CLAUDE.md` lo dice, ripetilo all'utente prima di

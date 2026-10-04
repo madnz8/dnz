@@ -72,9 +72,16 @@ gh repo view --json nameWithOwner -q .nameWithOwner
 ## Precondizioni (hard-stop se falliscono)
 
 - **Working tree pulito** (`git status --porcelain` vuoto). Il metodo si basa sull'albero finale: se
-  è sporco, non stai ricostruendo quello che pensi.
+  è sporco, non stai ricostruendo quello che pensi. Se non lo è, guarda cosa c'è:
+  - **lavoro del branch non ancora committato** — tipicamente le correzioni di review: fai un
+    **commit provvisorio** (aggiungi i file a uno a uno, non `git add -A`: gli artefatti locali non
+    ci devono entrare). Il metodo lo assorbe, perché riparte dall'albero finale e quel commit non
+    sopravvive. **Il tag del passo 3 si mette dopo**, altrimenti il gate del passo 5 confronta con un
+    albero senza quelle correzioni. Dillo all'utente prima;
+  - **qualunque altra cosa** — file che non c'entrano, artefatti locali: fermati.
 - Il branch **non** è quello di default, e **non** è già stato mergiato.
-- **Almeno tre commit** da raggruppare: sotto, non c'è niente da fare.
+- **Almeno tre commit** da raggruppare, contando l'eventuale commit provvisorio: sotto, non c'è niente
+  da fare.
 - **Nessun merge dentro il branch:**
   ```bash
   git log --merges "$BASE..HEAD" --oneline    # deve essere vuoto

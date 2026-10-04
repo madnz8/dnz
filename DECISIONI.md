@@ -670,6 +670,55 @@ sicura per ogni cosa rischia di togliere ciò che serviva.
 
 Versione del plugin **2.1.2**.
 
+## 2026-10-04 — `release` fa anche la prima release; il changelog di default è uno solo
+
+Partiti da due feedback di uso vero. Nel primo `release` si è fermata in un repo appena nato («nessuno
+strumento di release») e con lei si è fermata anche la pulizia del §8. Nel secondo si è fermata in un
+repo che uno strumento non l'aveva ma aveva release passate: l'agente ha ricostruito la procedura da
+quelle e l'ha fatta approvare in anteprima, ed è andata bene.
+
+**Rovescia in parte il §0 del 2026-09-16** («nessun meccanismo: fermati»). La skill ereditava l'idea
+dalle tre varianti, che usavano tutte uno script del proprio repo: «il repo sa come si fa, io lo
+seguo». In un repo nuovo è il contrario di ciò che serve, e la ragione per non decidere («non fissare
+uno schema che il repo non ha scelto») non regge: la prima release è il momento in cui lo schema si
+sceglie. Resta il divieto vero, quello di inventare un `npm version` che il repo non usa.
+
+Ora il §0 distingue tre casi: **strumento o procedura scritta** (si usa, vince su tutto),
+**nessuno strumento ma release passate** (si ricostruisce da quelle e si conferma in anteprima),
+**niente di niente** (§0b, la prima release).
+
+**La prima release scrive la procedura nel repo.** Tag annotato `vX.Y.Z`, `CHANGELOG-NOVITA.md`, e una
+sezione «Release» nel `CLAUDE.md`, che il §0 legge per prima e fa vincere: dalla seconda volta la
+skill trova la procedura da sola, senza rifare la scelta. La versione è il tag: senza `package.json`
+non c'è altro file da alzare. Push con `--follow-tags`, **mai `--tags`**, che pubblicherebbe anche i
+tag locali di salvataggio di `squash-story`.
+
+**Changelog: quello per gli utenti è il default, quello tecnico no.** Misurati i cinque repo:
+
+- `atala-portal` (root): generato dai messaggi di commit, fermo alla 0.15.0 — da non imitare;
+- `atala-portal` (`docs/changelog/`): Keep a Changelog, ma le voci diventano paragrafi;
+- `lifehacker`: Keep a Changelog in inglese, voci da quindici righe — è un diario, non si scorre;
+- `lead-generation`: un paragrafo per versione, si dichiara «checkpoint del lavoro»;
+- `trasformazione.ai-homepage`: voci di una o due frasi, e un secondo file per gli utenti — il più
+  equilibrato, e il modello del formato che ora il §4b fissa.
+
+Il tecnico **non si crea più da zero**: la storia tecnica è già in git (i gruppi di `squash-story`, i
+merge `--no-ff`, i tag), e un file che l'utente dichiara di non aprire mai costa a ogni release e
+invecchia. Dove esiste già lo si aggiorna come prima, e si scrive su richiesta. Il «Novità» invece
+dice ciò che git non sa dire — cosa puoi fare adesso — e ha già le sue regole (§4b); mancava solo il
+formato del file. Dove il repo mostra le novità altrove (atala: il JSON del popup) vince quel posto.
+
+**`squash-story` e l'albero sporco.** Le correzioni di review non committate sono il caso più comune,
+e la skill si fermava senza dire cosa fare. Ora: lavoro del branch → commit provvisorio (file a uno a
+uno), assorbito dal metodo; il tag di salvataggio si mette **dopo**, perché il gate del passo 5
+confronta con l'albero che contiene quelle correzioni. Qualunque altra cosa → ci si ferma. Il
+conteggio «almeno tre commit» include il provvisorio.
+
+**Non cambiato:** `merge` che non parte da solo (`disable-model-invocation`, voluto) e la suite al §5
+di `squash-story`, in attesa di un secondo caso.
+
+Versione del plugin **2.1.3**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato
