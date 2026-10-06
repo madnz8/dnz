@@ -11,15 +11,19 @@ quelle già fatte e quelle che non sono lavoro, e **riscrive il piano** di cosa 
 Si lancia **a mano**, ogni tanto. Il momento naturale è **prima di una release**, a epic chiusa: il
 registro ha appena ricevuto le voci nuove e non c'è una pipeline in volo.
 
-> **Due mondi, due comportamenti.** Il registro (`deferred-work.md`) lo scrive BMAD. Chi lo sa
-> *rileggere* no: esiste solo dove c'è `auto-bmad`, col suo script `deferred_ledger.py`.
+> **Tre mondi, tre comportamenti.** Il registro (`deferred-work.md`) lo scrive BMAD. Chi lo sa
+> *rileggere* dipende dal modulo installato.
 >
-> - **Mondo A — c'è lo script.** La skill **guida lo script** e rispetta la sua grammatica, perché
->   dall'altra parte c'è un parser: marcatori con le parole inglesi che riconosce, archivio, controllo
->   sha.
-> - **Mondo B — non c'è.** Il file è una casella di posta in entrata: BMAD ci appende e nessuno lo
->   rilegge. La skill fa il triage **scrivendo nel file con prudenza** — marcatori italiani, niente
->   archivio, niente vocabolario inglese.
+> - **Mondo C — voci `### DW-<n>:`, il formato di `bmad-loop`.** Il registro ha un formato vero:
+>   `status: open` o `status: done <data>`, una riga `resolution:`, id stabili. La skill **parla
+>   quel formato**, senza inventare campi, e per archiviare chiama `bmad-loop sweep --archive`.
+>   È il formato verso cui si va: vedi `DECISIONI.md`, 2026-10-06.
+> - **Mondo A — c'è lo script di `auto-bmad`.** La skill **guida lo script** e rispetta la sua
+>   grammatica, perché dall'altra parte c'è un parser: marcatori con le parole inglesi che
+>   riconosce, archivio, controllo sha.
+> - **Mondo B — non c'è niente.** Il file è una casella di posta in entrata: BMAD ci appende e
+>   nessuno lo rilegge. La skill fa il triage **scrivendo nel file con prudenza** — marcatori
+>   italiani, niente archivio, niente vocabolario inglese.
 >
 > Il passo 0 stabilisce in quale sei **prima** di toccare qualsiasi cosa. Senza registro la skill non
 > ha niente da fare e si ferma.
@@ -71,6 +75,12 @@ Se una di queste viene violata la skill ha fatto danno, non lavoro.
    grammatica; nel mondo B è BMAD a dire di non modificare le voci esistenti — marcarle è già al
    limite, riscriverle lo supera.
 
+   **Eccezione ammessa, solo nel mondo C:** il formato di `bmad-loop` prevede proprio questo
+   cambio. Su una voce confermata si può portare `status: open` a `status: done <data>`, aggiungere
+   una riga `resolution:` o una riga `decision:`. Niente altro: non si toccano `gate:`, `origin:`,
+   `source_spec:`, `severity:`, `location:`, `reason:`, né il titolo, né l'id, e le voci non si
+   rinumerano mai. Togliere un `gate:` sblocca in silenzio una storia.
+
 ## 0 — Orientati nel repo
 
 **Rileva, non presumere.** L'ordine conta: le prime due cose decidono il mondo, e il mondo decide
@@ -81,7 +91,28 @@ cosa fanno i passi 1, 3, 4 e 5.
 Di norma `_bmad-output/implementation-artifacts/deferred-work.md`. Se non c'è, o è vuoto,
 **fermati**: non c'è niente da triare, e non è un errore da sistemare.
 
-### Chi lo sa leggere
+### Il formato, prima di tutto
+
+```bash
+grep -cE '^### DW-[0-9]+:' <registro>
+```
+
+**Se ci sono intestazioni `### DW-<n>:` → mondo C**, qualunque cosa dica il controllo sullo script
+qui sotto: è il formato di `bmad-loop` e basta saperlo leggere. Il controllo viene **prima** perché
+un repo con `bmad-loop` ma senza `deferred_ledger.py` finirebbe per errore nel mondo B (è successo a
+perimetro il 2026-10-05). Salta al resto del passo 0, e nel mondo C chiedi anche:
+
+```bash
+command -v bmad-loop          # c'è? serve al passo 5 (archivio) e alla precondizione sui run
+grep -cE '^[-*+] ' <registro> # bullet in colonna 0: voci non ancora nel formato DW
+```
+
+Un bullet `- source_spec:` o una sezione libera dentro un registro DW **non è una voce DW**: lo
+scrivono BMAD vanilla (`bmad-build`, `bmad-code-review`), che appende alla vecchia maniera. Non lo
+converti tu (riscriveresti una voce che nessuno ti ha chiesto di riscrivere): **dì quanti sono**, e
+che `bmad-loop` li converte con la sua modalità di migrazione.
+
+### Chi lo sa leggere (solo se non è il mondo C)
 
 ```bash
 git ls-files -co --exclude-standard | grep '/deferred_ledger\.py$'
@@ -114,12 +145,13 @@ Lo script **vede il file** se:
 
 ### Il verdetto, dichiarato
 
-| registro | script | vede il file | mondo |
-|---|---|---|---|
-| no / vuoto | — | — | **stop** — niente da fare |
-| sì | no | — | **B** |
-| sì | sì | sì | **A** |
-| sì | sì | no | **stop** — dichiara i numeri |
+| registro | voci `### DW-<n>:` | script | vede il file | mondo |
+|---|---|---|---|---|
+| no / vuoto | — | — | — | **stop** — niente da fare |
+| sì | sì | qualunque | — | **C** |
+| sì | no | no | — | **B** |
+| sì | no | sì | sì | **A** |
+| sì | no | sì | no | **stop** — dichiara i numeri |
 
 Nell'ultimo caso **non si ripiega sul mondo B**: in un repo con `auto-bmad` quel file ha un lettore,
 solo che ne gira una copia vecchia. Il rimedio è aggiornare lo script upstream, ed è una decisione
@@ -128,6 +160,8 @@ dell'utente, non della skill.
 Prima di andare avanti **scrivi il verdetto in una riga**, sempre:
 
 ```
+Mondo C — formato bmad-loop: 12 voci DW (6 done, 6 open), 0 bullet fuori formato
+          bmad-loop presente (sweep --archive), nessun run in corso
 Mondo A — .claude/skills/auto-bmad/scripts/deferred_ledger.py (plan, archive; niente harvest)
           vede 161 voci su 167 bullet, 8 source_spec su 8
 Mondo B — nessuno script: 98 voci, triage con marcatori italiani, senza archivio
@@ -149,7 +183,7 @@ lo script al primo `archive`, e `_bmad-output/` c'è anche in subtxt, dove lo sc
 
 ## Precondizioni (hard-stop)
 
-**In entrambi i mondi:**
+**In tutti i mondi:**
 
 - **Working tree pulito** — la skill scrive almeno due file.
 
@@ -172,6 +206,20 @@ lo script al primo `archive`, e `_bmad-output/` c'è anche in subtxt, dove lo sc
 Nel mondo B non ce n'è una equivalente. Una code review aperta in un'altra sessione può appendere
 voci mentre lavori: finiscono in fondo, non toccano le tue modifiche, e le prende il giro dopo.
 
+**Solo nel mondo C:**
+
+- **Nessun run di `bmad-loop` in corso.** Il registro lo possiede il programma: durante un run
+  scrive lui (chiude le voci che una story dichiara con `closes_deferred`, aggiunge quelle nuove) e
+  due scrittori sullo stesso file si pestano i piedi. Il segnale è la lista dei run, non la data
+  dei file:
+
+  ```bash
+  bmad-loop ls --project .        # colonna STATUS: serve che siano tutti finished o stopped
+  ```
+
+  Se ce n'è uno `running` o in pausa, **chiedi**. Se `bmad-loop` non è installato non c'è niente da
+  controllare, e il passo 5 non si fa.
+
 ---
 
 ## 1 — Leggi il registro
@@ -190,6 +238,22 @@ Sola lettura. Restituisce ogni voce con un `id` stabile, il testo, l'intestazion
 
 **Tieni da parte il `ledger_sha256`**: serve al passo 5, e la sua scadenza è la prova che nessuno ha
 scritto sul file nel frattempo.
+
+**Mondo C:** leggi il file direttamente. Una voce comincia a `### DW-<n>:` e finisce al titolo
+successivo (qualunque `#`..`######`) o a un bullet `- source_spec:`. L'id è `DW-<n>` ed è stabile:
+chiama le voci con quello. Leggi `status:` **alla lettera**:
+
+- `status: open` → aperta;
+- `status: done <data ISO>` → chiusa: non è lavoro, **saltala** al passo 2 (se ha `archived:` il
+  corpo sta in `deferred-work-archive.md`, e ti serve solo se vuoi sapere come è stata risolta);
+- **qualunque altra cosa** (`opne`, `Done`, nessuna riga `status:`) → **non vale come chiusa**.
+  Non la correggi: la tratti come aperta e la segnali all'utente, perché è un errore del file;
+- una voce con `archived-body:` è stata archiviata e **riaperta**: è lavoro vivo, e il corpo che
+  aveva prima sta nell'archivio. Leggilo lì prima di giudicarla.
+
+`location:` può essere `n/a`: vuol dire «nessun posto registrato», e allora `reason:` spesso nomina
+il file. `gate:` non si legge per giudicare, si **porta nel piano**: una voce con `gate:` blocca
+storie, e il piano deve dirlo.
 
 **Mondo B:** leggi il file direttamente. Una voce è un bullet in colonna 0 con tutto ciò che è
 indentato sotto, fino al bullet successivo. Non ci sono `id` né hint — e un hint lì direbbe `open`
@@ -221,8 +285,42 @@ superata**, non il valore — «sopra il tetto di 800», non «a 853», che inve
 
 ## 3 — Marca le voci chiuse
 
-Solo sulle voci che il passo 2 ha confermato. In entrambi i mondi le forme sono due — voce finita
+Solo sulle voci che il passo 2 ha confermato. In ogni mondo le forme sono due — voce finita
 tutta, voce finita in parte — e la seconda è quella che evita un danno.
+
+### Mondo C — `status` e `resolution`, come li scrive `bmad-loop`
+
+**Voce interamente finita:** la riga `status: open` diventa `status: done <data ISO>` e **subito
+sotto** va una riga `resolution:`, **una riga sola**:
+
+```markdown
+status: done 2026-10-06
+resolution: `ci.yml` (passo «Schema e migrazioni allineati»), commit 212720b — la CI lancia `pnpm db:generate` e fallisce se `drizzle/` cambia
+```
+
+La `resolution:` dice **dove** e **come si è provato** (file, commit, cosa fallisce se si rompe), non
+«fatto». È la riga che `bmad-loop` e chi legge l'archivio avranno, e il corpo della voce non c'è più.
+
+- **Mai `esito:`, mai ✅, mai `CHIUSA`.** Quelle sono le forme degli altri due mondi; in un registro
+  DW non le legge nessuno.
+- **Una riga sola, davvero.** Il formato è a righe: un a-capo dentro il valore diventa contenuto
+  nuovo del registro. Un `###` all'inizio di riga crea una voce che nessuno ha aperto; un
+  `- source_spec:` all'inizio di riga taglia la voce in due. Se serve spazio, usa le virgole.
+- **`status:` si scrive esatto**, `done` minuscolo e la data ISO: uno `status` che il formato non sa
+  leggere non vale come chiuso, e un `gate:` sulla voce continuerebbe a bloccare.
+- **Data di chiusura:** quella in cui il lavoro è atterrato, se la sai (il commit), altrimenti oggi.
+
+**Voce finita solo in parte:** resta `status: open` — mai `done`. Sotto, una riga `decision:` (la
+forma è `decision: <data> <etichetta> — <dettaglio>`, e l'etichetta qui è `keep-open`):
+
+```markdown
+status: open
+decision: 2026-10-06 keep-open — fatto: il servizio Postgres nella CI; resta: il confronto della versione con quella di produzione
+```
+
+Perché `decision:` e non un campo nostro: è già nel formato, `bmad-loop` ne conosce il significato
+(la scelta di un umano su una voce che resta aperta) e non cambia lo `status`. Un campo inventato
+sarebbe una riga che nessun lettore capisce, in un file che non è nostro.
 
 ### Mondo A — la grammatica dello script
 
@@ -301,6 +399,19 @@ anti-marcita.
   esito: non-lavoro — decisione in sospeso: <quale, e chi la prende>
 ```
 
+**Mondo C** — la voce resta `status: open` e riceve una riga `decision:`, la stessa forma della
+chiusura parziale (passo 3), con `non-lavoro:` davanti al dettaglio:
+
+```markdown
+status: open
+decision: 2026-10-06 keep-open — non-lavoro: decisione in sospeso, la prende il committente (didascalie obbligatorie o no)
+```
+
+Il costo, accettato: `bmad-loop sweep` rilegge le voci aperte a ogni giro, quindi rivedrà anche
+queste. Non è un danno (le metterà fra le `decisions`, dov'è giusto che stiano), ed è il prezzo di non
+inventare un campo che il formato non ha. Il prossimo giro di **questa** skill, invece, le salta
+(passo 2).
+
 **Se il repo ha un registro dedicato per una famiglia di rinvii** — per esempio tutto ciò che si
 attiva solo a una svolta futura — il marcatore ci **rimanda** invece di duplicarne il contenuto:
 `[NON-LAVORO: attivo col SaaS — vedi saas-readiness-ledger]`.
@@ -318,7 +429,30 @@ inerte.
 ⚠️ **`[INNESCO: …]` non va nel registro.** La condizione che fa maturare un lavoro («quando un CSV
 supera le ~2000 righe») serve a chi decide, e chi decide legge il piano. Va nel piano, passo 6.
 
-## 5 — Archivia (solo mondo A)
+## 5 — Archivia (mondo C e mondo A)
+
+### Mondo C — lo fa `bmad-loop`, non la skill
+
+Se `bmad-loop` c'è, l'archivio si fa con **il suo comando**: sposta ogni voce `status: done` nel file
+fratello `deferred-work-archive.md` (corpo intero, più `archived: <data>`) e lascia nel registro un
+segnaposto con `status`, `origin`, `source_spec`, `severity`, `gate` e `archived`. La skill **non
+scrive i segnaposto a mano**: è un formato di `bmad-loop`, e imitarlo è il modo di sbagliarlo.
+
+```bash
+bmad-loop sweep --project . --archive --dry-run     # elenca cosa si sposterebbe, non scrive
+bmad-loop sweep --project . --archive               # lo fa
+```
+
+Prima il `--dry-run`, e **controlla l'elenco**: devono esserci le voci che hai chiuso adesso e quelle
+già chiuse in passato, mai una `open`. Dopo, il comando stampa `commit both files`: i due file
+(registro e archivio) vanno nello stesso commit, altrimenti lo spostamento non è durevole.
+`--before <data>` limita l'archivio alle chiusure precedenti a una data, se non vuoi spostare tutto.
+
+**Se `bmad-loop` non è installato, non si archivia.** Le voci chiuse restano dove sono, con il loro
+`status: done` e la `resolution:`: il file cresce, e il costo lo assorbe il piano, che parla solo
+delle aperte. Non si imita l'archivio.
+
+### Mondo A — lo script di `auto-bmad`
 
 Solo le voci che il passo 2 ha confermato **interamente** finite e che il passo 3 ha marcato.
 
@@ -417,6 +551,12 @@ docs(bmad): triage del registro dei rinvii <data>
 
 Nel corpo il perché — quante voci chiuse e con quale evidenza — non il riassunto del diff.
 
+**Mondo C:** nello stesso commit vanno il registro, l'archivio (se il passo 5 l'ha scritto) e il
+piano. **Prima di consegnare** lancia `bmad-loop validate --project .` (se c'è): deve uscire con 0 e
+senza segnalazioni sul registro. Attenzione, vuole l'albero pulito: se l'archivio ha appena scritto
+due file, committa **prima** e valida **dopo**, altrimenti dice `git worktree is not clean` e non
+vuol dire che hai sbagliato qualcosa.
+
 Se il triage **non ha prodotto nessun cambiamento**, non committare e non aprire la PR: dirlo e
 basta.
 
@@ -450,6 +590,15 @@ branch.
 **Attenzione ai numeri di epic che collidono.** Se il repo ha due track con numerazioni
 indipendenti, «epic N» è ambiguo: stabilisci **quale** track prima di agire — lo sprint file
 sbagliato produce lavoro confidentemente sbagliato.
+
+**`bmad-loop sweep` e questa skill non si sostituiscono** (mondo C). Lo sweep verifica le voci
+contro il codice e le partiziona (risolta, da costruire, bloccata, da scartare, decisione), poi
+**esegue** i gruppi di voci con sessioni di sviluppo sue; gira in automatico e non scrive niente per
+una persona. Questa skill fa la parte che lo sweep non fa: il piano per chi decide (il «perché
+adesso», i lavori scartati, le domande secche) e il non-lavoro. Non lanciare lo sweep da qui, e non
+scrivere nel registro mentre un run è in corso (precondizioni). Se in un repo vuoi che la skill si
+limiti al piano e lasci la verifica allo sweep, è una scelta da prendere e scrivere in `DECISIONI.md`,
+non da improvvisare in un giro.
 
 **Se GateGuard è attivo**, il primo `Bash` della sessione e la prima modifica di ogni file chiedono
 di presentare i fatti. Qui i file sono almeno due (registro e piano): mettine in conto due.

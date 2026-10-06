@@ -30,13 +30,18 @@ In `~/projects/`: `atala-portal`, `lifehacker`, `subtxt`, `lead-generation`,
 un altro repo si fa dalla sessione di quel repo, con un prompt che prepara l'utente: quindi qui si
 scrive il prompt (`MIGRAZIONE.md`), non la modifica.
 
-`deferred` è l'unica skill con due mondi, e il §0 decide quale:
+`deferred` è l'unica skill con tre mondi, e il §0 decide quale (il formato si controlla **prima**
+dello script). L'obiettivo è arrivare a uno solo, il C: vedi `DECISIONI.md`, 2026-10-06.
 
-- **mondo A**: c'è `auto-bmad` con `deferred_ledger.py`. In atala (1761 righe) e lifehacker (963
-  righe) le due copie **divergono**: quella di lifehacker non capisce le voci `source_spec`.
-  «Ho trovato lo script» non basta, la prova è un conteggio (`plan` contro `grep`).
-- **mondo B**: BMAD senza auto-bmad, cioè subtxt. Il registro è una casella di posta, senza
-  parser né archivio; il marcatore è una riga `esito:`. **Non ci è ancora stato fatto un giro vero.**
+- **mondo C**: voci `### DW-<n>:` nel formato di `bmad-loop`, cioè perimetro. Si chiude con
+  `status: done <data>` + `resolution:`; si archivia con `bmad-loop sweep --archive`.
+- **mondo A**: c'è `auto-bmad` con `deferred_ledger.py` (atala, in via di spegnimento; lifehacker
+  forse). In atala (1761 righe) e lifehacker (963 righe) le due copie **divergono**: quella di
+  lifehacker non capisce le voci `source_spec`. «Ho trovato lo script» non basta, la prova è un
+  conteggio (`plan` contro `grep`).
+- **mondo B**: BMAD senza auto-bmad né `bmad-loop`, cioè subtxt. Il registro è una casella di
+  posta, senza parser né archivio; il marcatore è una riga `esito:`. **Non ci è ancora stato fatto
+  un giro vero.**
 
 ## Installazione e distribuzione
 

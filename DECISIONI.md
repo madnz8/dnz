@@ -719,6 +719,72 @@ di `squash-story`, in attesa di un secondo caso.
 
 Versione del plugin **2.1.3**.
 
+## 2026-10-06 — `deferred`: il mondo C, il formato di `bmad-loop`
+
+Partiti da due fatti. Il primo: auto-bmad si spegne su atala. Il secondo: perimetro usa `bmad-loop`,
+e il suo registro non è di nessuno dei due mondi di prima: ha voci `### DW-<n>:` con `status:` e
+`resolution:`. Il giro del 2026-10-05 lì ha funzionato lo stesso, ma per merito di chi l'ha fatto: il
+§0 cercava bullet e non ne trovava (0 su 12 righe), e un repo con `bmad-loop` e senza
+`deferred_ledger.py` finiva nel mondo B per costruzione. Il feedback di chi lavora su perimetro e la
+mia analisi arrivavano allo stesso punto da due strade.
+
+**L'obiettivo è un formato solo per tutti i repo**, almeno per due cose: tenere pulito il file e
+segnare quando una riga è risolta. Il formato di `bmad-loop` è l'unico con campi veri per questo
+(`status: open` / `done <data>`, `resolution:`, id stabili, archivio con un segnaposto fisso). Gli
+altri due hanno quattro modi diversi di dire «chiusa» (✅, `CHIUSA`, `[RISOLTO]`, `esito:`).
+**Si va lì, in due tempi**, e questa voce è il primo.
+
+**Primo tempo, fatto qui: il mondo C.** La skill riconosce `### DW-<n>:` **prima** di cercare lo
+script, legge `status:` alla lettera (uno `status` che il formato non sa leggere non vale come chiuso:
+sblocca un `gate:`), chiude con `status: done <data ISO>` più `resolution:` su una riga sola, e non
+scrive mai `esito:`.
+
+Scelte prese, con il perché:
+
+- **Regola 3, eccezione scritta.** «Si aggiunge, non si riscrive» contraddiceva il passo 3: cambiare
+  `status` è una riscrittura. Nel mondo C il cambio di `status` e le righe `resolution:` e `decision:`
+  sono l'eccezione ammessa, perché il formato le prevede. Il resto della voce (`gate:`, `origin:`,
+  `source_spec:`, id, titolo) non si tocca, e le voci non si rinumerano.
+- **Chiusura parziale e non-lavoro: `decision:`, a `status: open`.** Il formato non ha un marcatore
+  per queste due. `decision: <data> keep-open — …` è già nel formato e `bmad-loop` ne conosce il
+  senso (la scelta di un umano su una voce che resta aperta). Costo accettato: lo sweep rilegge quelle
+  voci a ogni giro; le rimetterà fra le decisioni, dove stanno bene. Un campo inventato sarebbe una
+  riga che nessuno legge, in un file che non è nostro.
+- **Archivio: si usa `bmad-loop sweep --archive`, non si imita.** Provato su una copia di perimetro:
+  sposta le voci `done` in `deferred-work-archive.md` e lascia `status`, `origin`, `source_spec`,
+  `severity`, `archived`. Il `--dry-run` elenca prima cosa si sposterebbe. Senza `bmad-loop` installato
+  non si archivia: scrivere i segnaposto a mano è il modo di sbagliarli. Questo **rovescia** il «come
+  nel mondo B, non si archivia» proposto dal feedback di perimetro: ha deciso l'utente, allineandosi
+  a `bmad-loop`.
+- **Sovrapposizione con `bmad-loop sweep`: la skill resta un triage autonomo.** Lo sweep verifica e
+  partiziona, poi esegue i gruppi con sessioni sue, in automatico; non scrive un piano per chi
+  decide (il «perché adesso», i lavori scartati, le domande secche). Quella parte è solo di questa
+  skill. In più la skill non scrive nel registro mentre un run è in corso: il segnale è
+  `bmad-loop ls` (tutti `finished` o `stopped`), non la data dei file.
+- **Bullet fuori formato dentro un registro DW** (li scrive BMAD vanilla, che appende alla vecchia
+  maniera): la skill non li converte, **dice quanti sono**. Convertirli è riscrivere voci che nessuno
+  ha chiesto di riscrivere, ed è il secondo tempo.
+
+**Prova.** Su una copia di perimetro (clone locale, il repo vero non toccato): `bmad-loop sweep
+--archive` ha spostato le 6 voci `done` e lasciato i segnaposto; poi `bmad-loop validate` è uscito con
+0 e senza segnalazioni. Prima del commit nella copia diceva `git worktree is not clean`: non è un
+errore del registro, vuole l'albero pulito, e la skill ora lo dice al §7. Nella stessa copia ho poi
+scritto a mano una chiusura (`status: done` + `resolution:`) e una `decision: … keep-open — non-lavoro`
+nella forma che la skill prescrive: `validate` esce ancora con 0, e il `--dry-run` dell'archivio
+prende solo la voce chiusa, non quella con `decision:`. **Non provato:** la skill girata da capo su
+una copia, che verifica le voci contro il codice (qui si è provato il formato che scrive, non il
+giudizio); e il mondo C su un repo che non ha `bmad-loop` installato.
+
+**Secondo tempo, non iniziato:** portare nel formato DW i registri di subtxt, lifehacker e atala, e a
+quel punto la skill avrà una procedura sola e i mondi A e B escono. Prima di spegnere auto-bmad su
+atala conviene lanciare **una volta** il suo `reconcile` e `archive`: le 219 voci scendono a quelle
+che contano davvero, e la conversione costa molto meno. Riscrive voci vecchie, quindi si fa una volta
+per repo dalla sessione di quel repo, con un prompt in `MIGRAZIONE.md`. Subtxt per primo: 98 voci su
+98 sono bullet `source_spec`, quasi meccanico. Lì e in lifehacker `bmad-loop` non c'è: o si installa
+(serve l'archivio) o l'archivio resta fuori.
+
+Versione del plugin **2.2.0**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato
