@@ -43,6 +43,15 @@ dello script). L'obiettivo è arrivare a uno solo, il C: vedi `DECISIONI.md`, 20
   posta, senza parser né archivio; il marcatore è una riga `esito:`. **Non ci è ancora stato fatto
   un giro vero.**
 
+## Il secondo plugin: `cache-clock`
+
+`plugins/cache-clock/` non è una skill ma un **mod** (modulo a hook): aggiunge alla card di `statuspane` una
+riga con il tempo stimato alla scadenza della cache. Stesso marketplace, plugin a sé:
+`/plugin install cache-clock@dnz`, a livello utente. Si prova con `claude plugin validate plugins/cache-clock`
+e `claude plugin test plugins/cache-clock`. Due regole della sandbox che costano un giro a chi non le sa:
+una funzione che riceve `$` sta al livello alto del file, e `$.statuspane` si chiama senza leggerlo come
+valore. Il perché e i limiti stanno in `DECISIONI.md`, 2026-10-06.
+
 ## Installazione e distribuzione
 
 - In `~/admin` il plugin è installato con `scope=project`.

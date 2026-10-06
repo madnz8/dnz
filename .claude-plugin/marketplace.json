@@ -27,6 +27,19 @@
         "workflow"
       ],
       "category": "workflow"
+    },
+    {
+      "name": "cache-clock",
+      "source": "./plugins/cache-clock",
+      "description": "Mostra nella card di statuspane quanto manca alla scadenza della cache del prompt: una barra che si svuota, il tempo stimato e «fredda» quando è scaduta.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Daniele Bolletta",
+        "email": "daniele.bolletta@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": ["statusline", "cache", "mod", "statuspane"],
+      "category": "productivity"
     }
   ]
 }

@@ -785,6 +785,66 @@ per repo dalla sessione di quel repo, con un prompt in `MIGRAZIONE.md`. Subtxt p
 
 Versione del plugin **2.2.0**.
 
+## 2026-10-06 — `cache-clock`: un secondo plugin, e perché non un fork
+
+Partiti da un desiderio: la card di [statuspane](https://github.com/xuanji86/claude-statuspane) (MIT) è
+quella giusta, ma non dice quanto manca alla scadenza della cache del prompt. `cctop` la dice, ma è
+un'app Rust di una trentina di moduli, con molto altro che non serve.
+
+**Scelta: una riga in più, non un fork.** statuspane ha già un'API per righe esterne
+(`$.statuspane.progress()`), quindi il nostro codice è una sola cosa piccola (100 righe di modulo, più 149 di test) e la
+card resta quella di upstream, che si aggiorna da sola. Il fork costerebbe 776 righe da mantenere su
+un'API dei mod che si dichiara «early access»; resta aperto se i limiti della riga (sotto) diventassero
+stretti, e partirebbe dalla stessa logica.
+
+**Plugin a sé, nello stesso marketplace** (`plugins/cache-clock/`, `/plugin install cache-clock@dnz`).
+È un mod di interfaccia da avere in ogni sessione, non una skill che serve a un repo; e `dnz` resta fatto
+di sole skill. La versione di `dnz` non cambia: nessuna skill è stata toccata. Per `cache-clock` valgono
+le stesse regole: versione in `plugin.json` **e** nella sua voce di `marketplace.json`, uguali.
+
+**Cosa misura, e che è una stima.** L'istante in cui è partita l'ultima richiesta del thread principale,
+più un'ora. La scadenza esatta è `prompt_cache.expires_at` nel JSON della status line, ma l'API dei mod
+**non la espone**: verificato sui tipi della 2.1.291, `$.session.usage()` dà solo contesto, limiti e costo.
+Il TTL di un'ora è misurato, non presunto: in un transcript di questa macchina (90 chiamate) 1,17M token
+di cache scritti a 1h e zero a 5m. **Una sola sessione**: se un giorno il conto passa a 5 minuti, si cambia
+`TTL_MS` (e il confronto con `expires_at` resta l'unica prova esatta).
+
+Dettagli, ciascuno con la sua ragione:
+
+- **conta dall'invio, non dalla risposta**: una risposta lunga non deve far sembrare la cache più giovane
+  di quanto è;
+- **i subagent non contano**: hanno una cache loro, e la loro richiesta non rinnova quella del principale;
+- **una richiesta senza `usage` non conta**: è fallita, la cache non è stata toccata;
+- **la compattazione azzera la riga**: il prefisso nuovo non è in cache finché non parte la richiesta dopo;
+  una compattazione saltata o solo `precompute` non tocca niente;
+- **fredda si dice**: `fredda` e barra a zero, non una riga che sparisce. Sotto 5 minuti la riga diventa
+  rossa; è la soglia in cui una pausa costa una re-cache intera.
+
+**Scoperte sulla sandbox dei mod**, che valgono per chi scrive il prossimo:
+
+- una funzione che riceve `$` deve stare al livello alto del file, non dentro `register`;
+- un noun di `$` (`$.statuspane`) si **chiama**, non si legge come valore: niente `const api = $.statuspane`
+  né controllo di esistenza. Senza statuspane la chiamata lancia, e il modulo lo dice una volta sola nel
+  log di debug;
+- **non serve `dependencies`**: il log di debug del motore mostra `$.statuspane … $ built for
+  cache-clock,statuspane,…` anche senza dichiararla. Dichiararla avrebbe aperto la questione delle
+  dipendenze fra marketplace diversi, che non ho potuto verificare.
+
+**Limiti noti, da non nascondere:**
+
+- la riga sta fra i progressi di statuspane: massimo 5, ordinati per id, etichetta di 24 caratteri, tre
+  soli colori; l'interruttore è quello dei «Progress rows»;
+- dopo un resume non c'è riga fino alla prima risposta: l'evento `session.start` dei mod non porta
+  `seconds_since_last_response` (lo porta solo l'hook classico);
+- **vista disegnata in una sessione interattiva, ma solo in tmux a 170 colonne.** Verificato: 14 test con uno
+  statuspane finto, `claude plugin validate`, typecheck con tsc 5.9, e una sessione interattiva in tmux con
+  `--plugin-dir`: dopo la prima risposta la card mostra `cache ▰…▰ 100% ≈59m` e il log di debug ha una
+  chiamata a `$.statuspane.progress` al secondo, senza avvisi. Non provata in un terminale stretto
+  (sotto le 70 colonne la card non c'è) né dopo un `/compact` reale;
+- **la riga compare solo dopo la prima risposta del modello**: chi guarda prima vede la card senza `cache`.
+  Alla prima prova «non si vede» è venuto da qui e dal fatto che `/plugin install` non poteva ancora trovare
+  un plugin non pubblicato.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato
