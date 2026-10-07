@@ -1,8 +1,9 @@
 # dnz
 
 Plugin Claude Code con sette skill `/dnz:*` (`merge`, `release`, `squash-story`, `deferred`,
-`audit`, `ui-check`, `journal`), in `skills/<nome>/SKILL.md`. Il repo è anche il marketplace che le
-distribuisce: `github.com/madnz8/dnz` (privato). Si lavora **solo da qui**, non più da `~/admin`.
+`audit`, `ui-check`, `journal`), in `skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il
+prompt (`hooks/`, vedi sotto). Il repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz`
+(privato). Si lavora **solo da qui**, non più da `~/admin`.
 
 ## Prima di fare qualsiasi cosa
 
@@ -43,14 +44,19 @@ dello script). L'obiettivo è arrivare a uno solo, il C: vedi `DECISIONI.md`, 20
   posta, senza parser né archivio; il marcatore è una riga `esito:`. **Non ci è ancora stato fatto
   un giro vero.**
 
-## Il secondo plugin: `cache-clock`
+## Il mod: la card sopra il prompt
 
-`plugins/cache-clock/` non è una skill ma un **mod** (modulo a hook): aggiunge alla card di `statuspane` una
-riga con il tempo stimato alla scadenza della cache. Stesso marketplace, plugin a sé:
-`/plugin install cache-clock@dnz`, a livello utente. Si prova con `claude plugin validate plugins/cache-clock`
-e `claude plugin test plugins/cache-clock`. Due regole della sandbox che costano un giro a chi non le sa:
-una funzione che riceve `$` sta al livello alto del file, e `$.statuspane` si chiama senza leggerlo come
-valore. Il perché e i limiti stanno in `DECISIONI.md`, 2026-10-06.
+Oltre alle skill, `dnz` ha un **mod** (modulo a hook): una card sopra il prompt con modello e effort,
+contesto, limiti 5h / 7d, directory · branch · costo e il tempo stimato alla scadenza della cache. Sta in
+`hooks/` (`hooks.json` → `register.tsx`; `format.ts` è la parte pura, con i test) e `types/index.d.ts`.
+Ripreso nella forma da statuspane (MIT), ma **non è un fork** e non dipende da nessun altro plugin; se
+statuspane resta attivo ci sono due card. Si prova con `claude plugin validate .` e `claude plugin test .`,
+e si vede davvero con `claude --plugin-dir .` (la riga `cache` compare dopo la prima risposta).
+Regole della sandbox che costano un giro a chi non le sa: una funzione che riceve `$` sta al livello alto
+del file; lo stato condiviso va dichiarato in `types/index.d.ts` e nominato in `plugin.json`; **niente
+sequenze `\uXXXX` nel testo scritto**, arrivano già convertite e possono rompere una regex. Il perché e i
+limiti stanno in `DECISIONI.md`, 2026-10-06 e 2026-10-07 (la seconda rovescia la prima: niente più
+`cache-clock`).
 
 ## Installazione e distribuzione
 
@@ -59,7 +65,7 @@ valore. Il perché e i limiti stanno in `DECISIONI.md`, 2026-10-06.
   arrivano al web; la scelta fra le tre strade è aperta in `DECISIONI.md`.
 - **Pubblicare** = commit, push, poi `/plugin update dnz` nei repo. Alza la versione in
   `.claude-plugin/plugin.json` **e** `.claude-plugin/marketplace.json` (devono coincidere) quando
-  cambia il comportamento di una skill; per un ritocco di sola documentazione no.
+  cambia il comportamento di una skill o del mod; per un ritocco di sola documentazione no.
 
 ## GateGuard
 

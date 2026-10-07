@@ -845,6 +845,53 @@ Dettagli, ciascuno con la sua ragione:
   Alla prima prova «non si vede» è venuto da qui e dal fatto che `/plugin install` non poteva ancora trovare
   un plugin non pubblicato.
 
+## 2026-10-07 — la card è un mod di `dnz`; `cache-clock` rovesciata
+
+**Rovescia «un secondo plugin» del 2026-10-06.** Il motivo l'ha dato l'utente: un solo plugin da installare,
+senza dipendere da quello di altri. La riga `cache` passava da `$.statuspane`, quindi senza statuspane non
+esisteva. La scelta di ieri era giusta per «una riga in più»; non lo è per «niente dipendenze».
+
+**Cosa c'è ora.** `dnz` è skill **e** mod: `hooks/hooks.json` carica `hooks/register.tsx`, e `plugin.json`
+nomina `types/index.d.ts`. Il mod disegna una card sopra il prompt con modello e effort, contesto, i limiti
+5h / 7d con il conto del reset, directory · branch · costo, e la cache. `cache-clock` è tolta (repo,
+marketplace, disinstallata). Versione **2.3.0**, in `plugin.json` e `marketplace.json`: cambia il comportamento.
+
+**Non è un fork.** È scritto da capo guardando statuspane (MIT): la forma (barre `▰▱`, riga dei limiti, nome
+del modello, larghezza della card) è ripresa, e lo dice un commento in testa a `hooks/format.ts`.
+**Non portato**, perché l'utente non li usa: CI di GitHub, pagina delle impostazioni, API e file dei
+progressi, pulsante `⟲ compact`, comando `/statuspane`. Il file che decide cosa si dice è `hooks/format.ts`
+(puro, con i test); `hooks/register.tsx` ha gli hook e il disegno.
+
+**Differenze volute dalla card di statuspane:**
+
+- la cache è una riga come le altre, e **prima della prima risposta dice `—`** invece di sparire: «non la
+  vedo» è stato il primo malinteso di ieri;
+- lo stato sta in `$.state` (`atom`), non in variabili di modulo, che un hot reload perderebbe;
+- «nascondi» si ricorda fra le sessioni (`$.store`, chiave `hidden`);
+- un timer al secondo ridisegna la card **solo se** è cambiato qualcosa: il testo della cache o il minuto
+  (per i conti alla rovescia dei limiti).
+
+**Limiti noti:**
+
+- se statuspane resta attivo ci sono **due card**: va disinstallato o disabilitato;
+- niente impostazioni: righe e larghezza delle barre sono fisse; per cambiarle si edita `format.ts`;
+- vale ancora tutto ciò che si è detto ieri sulla cache: stima (invio dell'ultima richiesta + 1h), TTL
+  misurato su una sola sessione, nessun conto dopo un resume fino alla prima risposta;
+- verificata in tmux a 170 colonne (dopo la prima risposta `cache ▰…▰ ≈59m`, un minuto dopo `≈58m`, nessun
+  avviso nel log); **non** provata a terminale stretto né dopo un `/compact` reale (lo coprono i test).
+
+**Scoperte, per chi scrive il prossimo mod:**
+
+- **le sequenze `\uXXXX` nel testo che passo agli strumenti di scrittura arrivano al file già convertite**
+  in caratteri veri, e U+2028/U+2029 dentro un literal regex lo rompono («does not parse»). `clean()` usa
+  intervalli numerici di codepoint, senza sequenze di escape;
+- un plugin che dichiara stato con `atom` deve nominare il contratto nel manifest (`"types":
+  "./types/index.d.ts"`); senza, `claude plugin validate` dice «dnz.figures is not declared»;
+- un `ui.render` che il mod lascia stare (fascia stretta, desktop) ha bisogno nei test di un plugin finto
+  sotto che risponda, altrimenti `$.ui.mount` dà «no implementation for ui.render»;
+- la directory e il branch si leggono fuori dal percorso dello start: nei test serve un `clock.advance`
+  prima del `mount`.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato

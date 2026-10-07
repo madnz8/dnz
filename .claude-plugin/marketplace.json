@@ -11,8 +11,8 @@
     {
       "name": "dnz",
       "source": "./",
-      "description": "Sette comandi per chiudere il lavoro su un repo: squash della history, merge, release con changelog e pulizia dei branch, triage dei rinvii, audit periodico, verifica visiva della UI e diario di bordo. Scritti per rilevare le convenzioni del repo invece di presumerle.",
-      "version": "2.2.0",
+      "description": "Sette comandi per chiudere il lavoro su un repo (squash della history, merge, release con changelog, triage dei rinvii, audit, verifica visiva della UI, diario di bordo) e una card sopra il prompt con modello, contesto, limiti, branch, costo e tempo alla scadenza della cache. Le skill rilevano le convenzioni del repo invece di presumerle.",
+      "version": "2.3.0",
       "author": {
         "name": "Daniele Bolletta",
         "email": "daniele.bolletta@gmail.com"
@@ -24,22 +24,12 @@
         "changelog",
         "code-review",
         "audit",
-        "workflow"
+        "workflow",
+        "statusline",
+        "cache",
+        "mod"
       ],
       "category": "workflow"
-    },
-    {
-      "name": "cache-clock",
-      "source": "./plugins/cache-clock",
-      "description": "Mostra nella card di statuspane quanto manca alla scadenza della cache del prompt: una barra che si svuota, il tempo stimato e «fredda» quando è scaduta.",
-      "version": "0.1.0",
-      "author": {
-        "name": "Daniele Bolletta",
-        "email": "daniele.bolletta@gmail.com"
-      },
-      "license": "MIT",
-      "keywords": ["statusline", "cache", "mod", "statuspane"],
-      "category": "productivity"
     }
   ]
 }

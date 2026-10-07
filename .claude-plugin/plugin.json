@@ -1,7 +1,7 @@
 {
   "name": "dnz",
-  "version": "2.2.0",
-  "description": "Sette comandi per chiudere il lavoro su un repo: squash della history, merge, release con changelog e pulizia dei branch, triage dei rinvii, audit periodico, verifica visiva della UI e diario di bordo. Scritti per rilevare le convenzioni del repo invece di presumerle.",
+  "version": "2.3.0",
+  "description": "Sette comandi per chiudere il lavoro su un repo (squash della history, merge, release con changelog, triage dei rinvii, audit, verifica visiva della UI, diario di bordo) e una card sopra il prompt con modello, contesto, limiti, branch, costo e tempo alla scadenza della cache. Le skill rilevano le convenzioni del repo invece di presumerle.",
   "author": {
     "name": "Daniele Bolletta"
   },
@@ -12,9 +12,13 @@
     "changelog",
     "code-review",
     "audit",
-    "workflow"
+    "workflow",
+    "statusline",
+    "cache",
+    "mod"
   ],
   "skills": [
     "./skills/"
-  ]
+  ],
+  "types": "./types/index.d.ts"
 }
