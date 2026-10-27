@@ -892,6 +892,51 @@ progressi, pulsante `⟲ compact`, comando `/statuspane`. Il file che decide cos
 - la directory e il branch si leggono fuori dal percorso dello start: nei test serve un `clock.advance`
   prima del `mount`.
 
+## 2026-10-27 — `journal`: tetto di 20 righe, con un controllo meccanico
+
+Partiti da voci da 167 righe. La regola c'era già («se una voce supera le venti righe, si sta
+scrivendo troppo», §5), ma era un proposito: la compressione stava nella passata di fine sessione, e
+quella spesso non arriva, perché la chat si compatta o si interrompe prima. **Il tetto ora vale
+subito** (§2) e lo ricorda un hook.
+
+**L'hook sta nel frontmatter della skill, non nel plugin.** Prima di verificare avevo proposto il
+plugin, per paura che un hook di skill si spegnesse a fine turno o alla compattazione. La
+documentazione dice il contrario: *"registers them when you or Claude invoke the skill and keeps
+running them for the rest of the session"*. Nel frontmatter è coerente con la skill (invocarla accende
+anche il controllo) e non tocca i `journal.md` di chi la skill non l'ha invocata; un hook di plugin
+girerebbe in ogni sessione di ogni repo. `${CLAUDE_PLUGIN_ROOT}` nel comando la documentazione lo
+nomina solo di passaggio: provato, funziona.
+
+Scelte dello script (`skills/journal/check-entry.sh`), ciascuna con la sua ragione:
+
+- **la voce aperta è quella con la data di oggi nell'intestazione**, a qualunque livello, non
+  «l'ultimo `## `»: con le voci nuove in cima l'ultima è la più vecchia, e l'hook avrebbe chiesto di
+  riscrivere una voce chiusa, l'unica cosa che il §2 vieta. Per questo il §1 fissa la data
+  nell'intestazione nella forma di `date +%F`;
+- **righe non vuote, più un tetto di 300 parole**: contare le righe e basta si aggira scrivendone 20
+  lunghissime;
+- **`additionalContext`, non `decision: "block"`**: lo strumento ha già scritto, serve un promemoria;
+- **senza `jq` lo dice**, sui soli `journal.md`, invece di tacere.
+
+Il resto, nella skill: il §0 legge prima il `CLAUDE.md` del progetto (serve ai diari per macchina di
+`~/admin`), e un tema con una cartella sua si prende un `journal.md` suo, deciso con l'utente; questo
+rovescia il «non se ne apre un secondo» del §0 di prima. I dettagli operativi (ID, orari, hash,
+versioni, backup) stanno nei file di lavoro e il diario li linka. Il diario si scrive con Edit o
+Write, mai dalla shell, altrimenti l'hook non lo vede.
+
+**Prova.** 14 test dello script (`bash skills/journal/check-entry.test.sh`). Tre sessioni `claude -p
+--plugin-dir .` in cartelle dello scratchpad, con GateGuard spento nel processo figlio:
+
+- invocata la skill, voce di 25 righe scritta con Write: il messaggio arriva, col percorso vero;
+- **`/compact` fra l'invocazione e la scrittura**: il messaggio arriva lo stesso;
+- **`claude --resume` della prima sessione, senza reinvocarla**: l'hook non c'è. Scritto in testa
+  alla skill: dopo un riavvio la si invoca di nuovo.
+
+**Non provato:** `/resume` dall'interno di una sessione interattiva; Windows (Git Bash, `jq` spesso
+assente: il ramo senza `jq` è coperto solo dal test).
+
+`journal` non nomina Linear. Versione del plugin **2.4.0**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato

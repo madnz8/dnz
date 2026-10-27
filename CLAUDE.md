@@ -21,6 +21,9 @@ se la rovesci, aggiungi una voce datata che dice cosa cambia e perché, senza ca
   se nomina Linear.
 - `disable-model-invocation: true` su `merge`, `release` e `squash-story` (pushano, rilasciano,
   riscrivono la history: partono solo se le digiti). Le altre quattro restano invocabili dal modello.
+- `journal` è l'unica skill con un hook nel frontmatter: `check-entry.sh` (PostToolUse su `Write|Edit`)
+  misura la voce aperta del diario. Si prova con `bash skills/journal/check-entry.test.sh`. Un hook di
+  skill si registra quando la skill viene invocata, regge a `/compact` ma non a `claude --resume`.
 - Il prefisso `dnz:` lo dà il plugin, non la cartella: una skill copiata in `.claude/skills/merge/`
   si chiamerebbe `/merge`.
 
