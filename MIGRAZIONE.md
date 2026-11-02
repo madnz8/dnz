@@ -117,6 +117,27 @@ Aveva 5 comandi: `deferred`, `merge`, `release`, `squash-story`, `ui-check`. Ne 
 > **5.** Il registro dei rinvii è del **mondo A** (c'è `auto-bmad` con `deferred_ledger.py`). Il §0
 > di `deferred` lo verifica con un conteggio prima di agire: se dice che lo script non vede il file,
 > non è un guasto della skill, è la risposta giusta — riferiscilo, non aggirarlo.
+>
+> **6. (aggiunto il 2026-11-02, plugin 2.5.0)** La skill `dnz-create-ticket-linear` di questo repo è
+> salita nel plugin come `/dnz:create-ticket-linear`, generica. Prima di toglierla, verifica con
+> `/plugin` che `dnz` sia almeno alla 2.5.0. Poi:
+>
+> - **Sposta nel `CLAUDE.md` i fatti che la versione del plugin non contiene più**, in una sezione
+>   «Linear» vicino a «SuperPlane»: team **Rawbot** e progetto **Dhamma Atala Portal**; l'etichetta di
+>   via (`agents` = una storia, pronta, fa partire SuperPlane; `bmad-planning` = più storie da
+>   pianificare insieme, a mano), al massimo una per ticket; le etichette di tipo (`Bug`, `Feature`,
+>   `Improvement`, `Refactor`, `Docs`, `Chore`) e di area (`MCP`, `Prompt Library`, `Resource`);
+>   assegnatario sempre Daniele Bolletta (utente Linear `dani`); gli stati (`Backlog` se manca
+>   qualcosa, `Icebox` se non è deciso che si fa, `Ready` se è rivisto e completo, `Ticket` è dove il
+>   chatbot del portale crea le richieste e non ci si mette niente a mano); il bucket dei bug minori è
+>   chiuso dal 2026-10-27 (RAW-52) senza successore; i finding tecnici che nessun utente vede vanno in
+>   `_bmad-output/implementation-artifacts/deferred-work.md`; mai dati reali di meditatori od ospiti né
+>   valori da `.local-data/`. Prima di scriverli confrontali con la copia del repo: se nel frattempo è
+>   cambiata, vince la copia.
+> - Nella sezione «SuperPlane» sostituisci «skill `dnz-create-ticket-linear`» con
+>   `/dnz:create-ticket-linear`.
+> - Rimuovi `.claude/skills/dnz-create-ticket-linear/`. Da Claude web la skill non ci sarà più finché
+>   non si sceglie come portare il plugin sul web: è voluto.
 
 ---
 

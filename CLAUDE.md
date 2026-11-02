@@ -1,7 +1,7 @@
 # dnz
 
-Plugin Claude Code con sette skill `/dnz:*` (`merge`, `release`, `squash-story`, `deferred`,
-`audit`, `ui-check`, `journal`), in `skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il
+Plugin Claude Code con otto skill `/dnz:*` (`merge`, `release`, `squash-story`, `deferred`,
+`audit`, `ui-check`, `journal`, `create-ticket-linear`), in `skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il
 prompt (`hooks/`, vedi sotto). Il repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz`
 (privato). Si lavora **solo da qui**, non più da `~/admin`.
 
@@ -18,9 +18,11 @@ se la rovesci, aggiungi una voce datata che dice cosa cambia e perché, senza ca
   di un singolo repo stanno nel `CLAUDE.md` di quel repo, mai qui.
 - Il tracker (Linear, Jira, GitHub Issues) è una casistica, non un prerequisito: il passo che lo usa
   si salta senza rumore e non si inventano ticket. Ogni skill revisionata dichiara in `DECISIONI.md`
-  se nomina Linear.
+  se nomina Linear. L'eccezione è `create-ticket-linear`, dove il ticket è lo scopo: senza Linear si
+  ferma.
 - `disable-model-invocation: true` su `merge`, `release` e `squash-story` (pushano, rilasciano,
-  riscrivono la history: partono solo se le digiti). Le altre quattro restano invocabili dal modello.
+  riscrivono la history: partono solo se le digiti). Le altre cinque restano invocabili dal modello
+  (`create-ticket-linear` scrive su Linear solo dopo l'ok dell'utente).
 - `journal` è l'unica skill con un hook nel frontmatter: `check-entry.sh` (PostToolUse su `Write|Edit`)
   misura la voce aperta del diario. Si prova con `bash skills/journal/check-entry.test.sh`. Un hook di
   skill si registra quando la skill viene invocata, regge a `/compact` ma non a `claude --resume`.

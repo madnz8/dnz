@@ -44,6 +44,7 @@ sono compatibili con questo principio.
 | `ui-check` | ✅ 2026-09-22 | sale; il §1 era conoscenza di macchina, non di repo |
 | `audit` | ✅ 2026-09-22 | sale; metodologia separata dai fatti di lifehacker |
 | `journal` | ✅ 2026-09-22 | sale invariato; la più generale delle sette |
+| `create-ticket-linear` | ✅ 2026-11-02 | da atala; i fatti di Linear tornano nel `CLAUDE.md` del repo |
 
 ## Decisioni
 
@@ -936,6 +937,51 @@ Write, mai dalla shell, altrimenti l'hook non lo vede.
 assente: il ramo senza `jq` è coperto solo dal test).
 
 `journal` non nomina Linear. Versione del plugin **2.4.0**.
+
+## 2026-11-02 — `create-ticket-linear`: l'ottava skill, da atala
+
+L'utente la voleva nel plugin. In atala stava in `.claude/skills/dnz-create-ticket-linear/` (113 righe,
+4 commit). Il metodo sale invariato: capire l'intent, guardare codice e ticket aperti, contare le
+storie, sezioni fisse, mostrare e salvare solo dopo l'ok.
+
+**Esce dalla skill il blocco «Fatti di questo repo»**, che era metà del file: team Rawbot e progetto,
+etichette di via `agents` e `bmad-planning` con SuperPlane, elenco delle etichette, assegnatario fisso,
+stati `Icebox`/`Ready`/`Ticket`, bucket dei bug minori chiuso (RAW-52), percorso del registro dei
+rinvii, meditatori e `.local-data/`. Al loro posto un §0 «Orientati» come nelle altre: legge il
+`CLAUDE.md` del repo e chiede il resto a Linear (`list_issue_labels`, `list_issue_statuses`, `get_user
+me`), dichiarando nella proposta ciò che ha scelto da sé. Il `CLAUDE.md` di atala quei fatti oggi non li
+ha (ha solo la sezione SuperPlane): il prompt è in `MIGRAZIONE.md`. Generalizzati con un nome:
+l'etichetta che fa partire un'automazione si chiama **etichetta di via**, e la regola «la mette
+l'utente» resta.
+
+**Restano, perché valgono ovunque:** assegnatario, etichetta di tipo e priority sempre presenti
+(default 3); da 1 a 3 etichette di tipo e area; un bug che si vede è un ticket suo; niente `@nome` né
+`#N` nudo; niente dati personali veri.
+
+**Eccezione al principio del tracker, scritta.** Il principio dice che il tracker è una casistica e il
+passo che lo usa si salta. Qui il ticket è lo scopo, non un passo: senza il connettore Linear la skill
+**si ferma e lo dice**, e non ripiega su un file. Jira e GitHub Issues non sono scritti finché un repo
+non li chiede. È l'unica delle otto che nomina Linear per costruzione.
+
+**Nome:** `create-ticket-linear`, scelto dall'utente fra questo, `ticket` e `create-ticket`. Lega il
+nome a Linear, coerente con l'eccezione qui sopra.
+
+**Invocazione: aperta.** L'utente vuole che tutte le skill senza azioni irreversibili partano da sole.
+Questa scrive fuori dal repo, ma il §5 non salva niente senza l'ok.
+
+**La copia di atala si toglie** (scelta dell'utente), anche se oggi è l'unica che arriva a Claude web:
+una fonte sola, e il web resta il punto 4 degli Aperti.
+
+**La relazione «bloccato da» diventa obbligatoria** (stesso giorno, dal commento di una sessione di
+atala che metteva il secondo di due ticket in sequenza in `Backlog` senza dire se l'avesse legato al
+primo). La regola c'era già, ma come descrizione: ora un ticket in attesa di un altro ticket senza la
+relazione non arriva alla proposta del §5, come uno senza assegnatario, e la sezione «Cosa manca» nomina
+il ticket che blocca con il suo identificativo. Lo stato da solo dice che un ticket aspetta, non cosa.
+
+**Non provato:** un giro vero con un repo il cui `CLAUDE.md` non dice niente di Linear (il §0 che
+propone dai dati di Linear).
+
+Versione del plugin **2.5.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 
