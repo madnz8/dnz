@@ -1,12 +1,16 @@
 ---
-name: deferred
-description: "Triage periodico del registro dei rinvii: verifica ogni voce contro il codice reale, marca il finito e il non-lavoro, archivia dove c'è lo strumento per farlo, e riscrive il piano di cosa conviene fare adesso."
+name: deferred-triage
+description: "Triage periodico, a mano, del registro dei rinvii di BMAD (deferred-work.md): verifica le voci aperte contro il codice, marca il finito e il non-lavoro, archivia dove c'è lo strumento e riscrive il piano di cosa fare adesso. Non aggiunge voci e non serve a rinviare un finding: quello lo fanno BMAD e bmad-loop."
 ---
 
-# dnz:deferred
+# dnz:deferred-triage
 
 Triage periodico del **registro dei rinvii**: verifica ogni voce **contro il codice reale**, marca
 quelle già fatte e quelle che non sono lavoro, e **riscrive il piano** di cosa conviene fare adesso.
+
+> **Non è il modo di scrivere nel registro.** Per rinviare un finding durante una review o una storia
+> non serve questa skill: le voci le aggiungono BMAD (`bmad-build`, `bmad-code-review`) e `bmad-loop`.
+> Questa skill le **rilegge** a giro concluso, e non ne aggiunge mai (regola 3).
 
 Si lancia **a mano**, ogni tanto. Il momento naturale è **prima di una release**, a epic chiusa: il
 registro ha appena ricevuto le voci nuove e non c'è una pipeline in volo.

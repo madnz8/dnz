@@ -106,7 +106,7 @@ Tre lenti per la lettura integrale, in quest'ordine:
 
 **È la parte che i repo sbagliano di più**, ed è il motivo principale per cui questa skill esiste.
 
-1. **Registro dei rinvii**: lancia **`/dnz:deferred`** — triage completo, marcatori, archivio
+1. **Registro dei rinvii**: lancia **`/dnz:deferred-triage`** — triage completo, marcatori, archivio
    dove c'è lo script per farlo, piano. È il pezzo grosso, e ha le sue regole.
 2. **Stato di story ed epiche**: ogni voce non chiusa e ogni action item aperto si verifica
    **contro git** (`git log`, `gh pr view`), **mai contro un altro file di tracking** — quello
@@ -146,7 +146,7 @@ Nuovo file datato, nella **forma della serie** letta al passo 0:
 
 Aggiorna l'indice dei report.
 
-⚠️ **Il piano è uno solo, e non è questo.** Al passo 3 hai lanciato `/dnz:deferred`, che ha già
+⚠️ **Il piano è uno solo, e non è questo.** Al passo 3 hai lanciato `/dnz:deferred-triage`, che ha già
 riscritto il suo piano — batch, ordine, minimo indispensabile, cosa ha scartato e perché. Il report
 **ci rimanda**, non lo riscrive: due documenti che dicono cosa fare, prodotti a dieci minuti di
 distanza, divergono al primo che qualcuno aggiorna, e da lì in poi nessuno sa quale vale.
@@ -172,7 +172,7 @@ cosa da fare — e poi il puntatore al report. Linguaggio piano, niente gergo di
 mai il contrario. Verifica contro git e contro il codice, **mai contro un altro file di tracking**.
 
 **Se il registro dei rinvii è in una lingua e il classificatore cerca parole in un'altra**, il suo
-suggerimento è inaffidabile: vedi le Trappole di `/dnz:deferred`.
+suggerimento è inaffidabile: vedi le Trappole di `/dnz:deferred-triage`.
 
 **Gli strumenti di audit delle dipendenze contano anche ciò che non gira.** Sempre il trace
 import-per-import prima di scrivere "vulnerabile".

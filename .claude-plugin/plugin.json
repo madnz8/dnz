@@ -1,6 +1,6 @@
 {
   "name": "dnz",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "description": "Otto comandi per il lavoro su un repo (squash della history, merge, release con changelog, triage dei rinvii, audit, verifica visiva della UI, diario di bordo, apertura di ticket Linear) e una card sopra il prompt con modello, contesto, limiti, branch, costo e tempo alla scadenza della cache. Le skill rilevano le convenzioni del repo invece di presumerle.",
   "author": {
     "name": "Daniele Bolletta"

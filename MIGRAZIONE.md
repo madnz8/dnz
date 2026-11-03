@@ -55,6 +55,12 @@ conteneva.
 
 Sotto, un prompt per repo con l'elenco esatto.
 
+> **Dal 2026-11-02 (plugin 3.0.0) `/dnz:deferred` si chiama `/dnz:deferred-triage`.** Il nome vecchio
+> non esiste più. Nei prompt sotto, «`deferred`» vuol dire questa skill. In ogni repo, durante la
+> migrazione, sostituisci `/dnz:deferred` con `/dnz:deferred-triage` nel `CLAUDE.md` e nella
+> documentazione viva (oggi: `lifehacker/CLAUDE.md`, riga 43). Non toccare i documenti storici, come
+> le retrospettive di subtxt: raccontano cosa si chiamava come, allora.
+
 ---
 
 ## atala-portal
@@ -180,7 +186,7 @@ Aveva 4 comandi: `audit`, `deferred`, `release`, `squash-story`. Ne riceve 7.
 > **3.** Cambiamenti di questa revisione che toccano questo repo:
 >
 > - **Il piano è uno solo.** `audit` non scrive più una propria sezione "interventi": rimanda al
->   piano che `/dnz:deferred` ha appena riscritto, e tiene solo i finding che quel piano non può
+>   piano che `/dnz:deferred-triage` ha appena riscritto, e tiene solo i finding che quel piano non può
 >   sapere. Se hai report vecchi con due piani, il piano dei rinvii è quello buono.
 > - **`squash-story` cambia metodo, e cambia rispetto alla regola di questo repo.** Non aggrega più i
 >   commit esistenti con un rebase: fa `git reset --mixed <base>` e **ricostruisce l'albero finale**

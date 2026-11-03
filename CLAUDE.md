@@ -1,6 +1,6 @@
 # dnz
 
-Plugin Claude Code con otto skill `/dnz:*` (`merge`, `release`, `squash-story`, `deferred`,
+Plugin Claude Code con otto skill `/dnz:*` (`merge`, `release`, `squash-story`, `deferred-triage`,
 `audit`, `ui-check`, `journal`, `create-ticket-linear`), in `skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il
 prompt (`hooks/`, vedi sotto). Il repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz`
 (privato). Si lavora **solo da qui**, non più da `~/admin`.
@@ -36,7 +36,7 @@ In `~/projects/`: `atala-portal`, `lifehacker`, `subtxt`, `lead-generation`,
 un altro repo si fa dalla sessione di quel repo, con un prompt che prepara l'utente: quindi qui si
 scrive il prompt (`MIGRAZIONE.md`), non la modifica.
 
-`deferred` è l'unica skill con tre mondi, e il §0 decide quale (il formato si controlla **prima**
+`deferred-triage` è l'unica skill con tre mondi, e il §0 decide quale (il formato si controlla **prima**
 dello script). L'obiettivo è arrivare a uno solo, il C: vedi `DECISIONI.md`, 2026-10-06.
 
 - **mondo C**: voci `### DW-<n>:` nel formato di `bmad-loop`, cioè perimetro. Si chiude con

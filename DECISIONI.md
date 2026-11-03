@@ -39,7 +39,7 @@ sono compatibili con questo principio.
 |---|---|---|
 | `merge` | ✅ 2026-09-16 | push del default e cleanup del branch rimossi |
 | `release` | ✅ 2026-09-16 | assorbe le 2 varianti; pusha, pulisce i branch, §4b sulle Novità |
-| `deferred` | ✅ 2026-09-28 | due mondi: con lo script di auto-bmad lo guida, senza fa il triage sul posto |
+| `deferred` → `deferred-triage` | ✅ 2026-09-28 | due mondi: con lo script di auto-bmad lo guida, senza fa il triage sul posto; rinominata il 2026-11-02 |
 | `squash-story` | ✅ 2026-09-16 | criterio unificato sull'appartenenza; provenienza opzionale |
 | `ui-check` | ✅ 2026-09-22 | sale; il §1 era conoscenza di macchina, non di repo |
 | `audit` | ✅ 2026-09-22 | sale; metodologia separata dai fatti di lifehacker |
@@ -982,6 +982,28 @@ il ticket che blocca con il suo identificativo. Lo stato da solo dice che un tic
 propone dai dati di Linear).
 
 Versione del plugin **2.5.0**.
+
+## 2026-11-02 — `deferred` diventa `deferred-triage`, e dice cosa non fa
+
+Gli agenti la scambiavano per lo strumento con cui si scrive nel registro dei rinvii: un agente che
+stava per rinviare un finding, o voleva «gestire» `deferred-work.md`, la sceglieva. Il modello decide
+quasi solo dalla `description`, che diceva «registro dei rinvii» e niente su cosa la skill **non** fa.
+Peggiorava le cose `create-ticket-linear`, che manda i finding tecnici «dove il repo tiene i rinvii».
+
+- **`description` riscritta**: «triage periodico, a mano, del registro di BMAD»; non aggiunge voci e
+  non serve a rinviare un finding, che è lavoro di BMAD e `bmad-loop`. La stessa cosa in un riquadro
+  sotto il titolo. Il comportamento della skill non cambia.
+- **Nome: `deferred-triage`**, scelto dall'utente perché si capisca dal titolo. Fra le due forme
+  proposte (`deferred-triage`, `triage-deferred`) ho preso la prima: `/dnz:def` resta l'inizio da
+  digitare, come prima. Cartella spostata con `git mv`, così la history segue il file.
+- **Resta avviabile dal modello.** `disable-model-invocation` avrebbe tolto la confusione alla radice,
+  ma va contro la scelta dell'utente sulle skill non distruttive; prima si prova con la descrizione.
+
+Aggiornati i rimandi in `audit` (tre), `CLAUDE.md` e `MIGRAZIONE.md`, che ora ha in testa una nota per i
+repo: `lifehacker/CLAUDE.md` riga 43 nomina ancora `/dnz:deferred`. Le voci vecchie di questo file
+restano col nome di allora.
+
+**Il nome vecchio smette di funzionare**, quindi è un cambio che rompe: `feat!:` e versione **3.0.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 
