@@ -234,7 +234,7 @@ esplicita**. Senza strumento (§0b o procedura ricostruita) l'anteprima è: il f
 Lancia il comando rilevato al passo 0, o i comandi del §0b.
 
 Il **commit di release** lo genera lo strumento (`chore: release vX.Y.Z` o simile) e resta fuori dal
-formato di `/dnz:commit`: non va «corretto». Vale solo il divieto di attribuzione (`/dnz:commit` §7).
+formato di `/dnz:commit`: non va «corretto».
 
 > ⚠️ Questo passo **pusha sul branch di default**, e con esso tutti i merge accumulati in locale. In
 > molti repo quel push fa partire un deploy: se il `CLAUDE.md` lo dice, ripetilo all'utente prima di

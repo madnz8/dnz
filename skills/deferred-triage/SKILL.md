@@ -554,7 +554,7 @@ docs(bmad): triage del registro dei rinvii <data>
 ```
 
 Nel corpo il perché — quante voci chiuse e con quale evidenza — non il riassunto del diff. Per il
-resto (lingua, lunghezza, nessuna attribuzione) valgono le regole di `/dnz:commit`.
+resto (lingua, lunghezza) valgono le regole di `/dnz:commit`.
 
 **Mondo C:** nello stesso commit vanno il registro, l'archivio (se il passo 5 l'ha scritto) e il
 piano. **Prima di consegnare** lancia `bmad-loop validate --project .` (se c'è): deve uscire con 0 e

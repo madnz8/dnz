@@ -45,7 +45,7 @@ sono compatibili con questo principio.
 | `audit` | ✅ 2026-09-22 | sale; metodologia separata dai fatti di lifehacker |
 | `journal` | ✅ 2026-09-22 | sale invariato; la più generale delle sette |
 | `create-ticket-linear` | ✅ 2026-11-02 | da atala; i fatti di Linear tornano nel `CLAUDE.md` del repo |
-| `commit` | ✅ 2026-11-06 | nuova; fonte unica delle convenzioni dei messaggi, con l'hook di attribuzione |
+| `commit` | ✅ 2026-11-06 | nuova; fonte unica delle convenzioni dei messaggi; attribuzione tolta lo stesso giorno |
 | `create-branch` | ✅ 2026-11-06 | nuova; apre il branch, invocabile dal modello |
 
 ## Decisioni
@@ -1098,6 +1098,20 @@ un giro vero.
 
 `commit` e `create-branch` non nominano Linear se non come esempio di tracker, e il passo che lo usa si
 salta. Versione del plugin **3.1.0**.
+
+## 2026-11-06 — l'attribuzione esce dal plugin: la spegne l'impostazione
+
+**Rovescia i «tre livelli» della voce precedente**, lo stesso giorno. L'utente ha messo
+`"attribution": false` nelle impostazioni utente, e con quella Claude Code non chiede più le righe:
+il divieto nelle skill e l'hook che lo faceva rispettare non hanno più niente da fermare. Tolti:
+`commit` §7, i rimandi in `merge`, `squash-story`, `release` e `deferred-triage`, l'hook
+(`hooks/no-attribution.py`, i suoi test e la voce in `hooks/hooks.json`, che torna al solo `modules`).
+
+**Cosa resta scoperto, detto una volta:** l'impostazione utente vale solo su questa macchina. Una
+sessione cloud non la legge: lì le righe tornano, a meno che il repo non committi la stessa chiave in
+`.claude/settings.json`. È una scelta del singolo repo, non del plugin.
+
+Versione del plugin **3.2.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 

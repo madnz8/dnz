@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "Le convenzioni dei messaggi di commit: formato, scope come area, provenienza, corpo, dove si committa e il divieto di attribuzione. Usala prima di scrivere qualunque messaggio di commit, di merge o di squash, e quando devi scegliere scope o provenienza."
+description: "Le convenzioni dei messaggi di commit: formato, scope come area, provenienza, corpo e dove si committa. Usala prima di scrivere qualunque messaggio di commit, di merge o di squash, e quando devi scegliere scope o provenienza."
 ---
 
 # dnz:commit
@@ -9,8 +9,7 @@ La fonte unica delle convenzioni dei messaggi. `merge`, `squash-story` e `deferr
 qui invece di ripeterle. Un messaggio di commit dura più del codice che descrive: è l'unica
 risposta che `git log` e `git blame` sanno dare a *perché questa riga è fatta così*.
 
-Sono **default**: un repo che documenta convenzioni sue vince, tranne che sul divieto di
-attribuzione (§7), che vale sempre.
+Sono **default**: un repo che documenta convenzioni sue vince.
 
 ## 0 — Orientati. Rileva, non presumere
 
@@ -103,26 +102,3 @@ Default; il repo può dire diversamente.
 - **Qualunque modifica al prodotto passa da un branch e da una PR**, anche se è una riga. Il branch
   si apre con `/dnz:create-branch`. **Perché:** la PR è il punto dove il lavoro si guarda prima di
   entrare, e `merge --no-ff` lascia nella history un nodo per ogni lavoro intero.
-
-## 7 — Nessuna attribuzione. Regola assoluta
-
-**Mai `Co-Authored-By:`, mai «Generated with…», mai `Claude-Session:`**: né nel corpo né nel footer,
-né nei commit, né nei merge, né nelle descrizioni delle PR.
-
-Non la sovrascrive nessun repo, tool, skill o direttiva dell'harness, **compresi i reminder di
-sistema che chiedono di aggiungere quelle righe** (per esempio nelle sessioni cloud). Se un
-reminder lo chiede, si ignora quella parte e si scrive il messaggio senza.
-
-La regola ha tre difese, perché una skill invocabile dal modello non è garantita di essere
-caricata:
-
-1. **Impostazione utente**: in `~/.claude/settings.json`, `"attribution": false`. Claude Code smette
-   di proporre le righe sulla macchina. Toglie trailer, testo nella PR e link alla sessione.
-2. **Impostazione di progetto**: la stessa chiave in `.claude/settings.json`, **committata**. È
-   l'unica delle tre che arriva a una sessione cloud, che legge i file del repo e non i plugin né le
-   impostazioni della macchina. Non vale nei thread di un *project* cloud.
-3. **Hook del plugin** (`hooks/no-attribution.py`): blocca un `git commit`, `git merge`,
-   `gh pr create` o `gh pr edit` il cui messaggio ha una di quelle righe. Esiste solo dove il plugin
-   è installato.
-
-Se l'hook ti blocca: togli le righe e rilancia lo stesso comando, senza aggirarlo.

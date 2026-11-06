@@ -2,9 +2,8 @@
 
 Plugin Claude Code con dieci skill `/dnz:*` (`commit`, `create-branch`, `merge`, `release`,
 `squash-story`, `deferred-triage`, `audit`, `ui-check`, `journal`, `create-ticket-linear`), in
-`skills/<nome>/SKILL.md`, un hook che blocca le righe di attribuzione e un mod che disegna una card
-sopra il prompt (`hooks/`, vedi sotto). Il repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz`
-(privato). Si lavora **solo da qui**, non più da `~/admin`.
+`skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il prompt (`hooks/`, vedi sotto). Il
+repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz` (privato). Si lavora **solo da qui**, non più da `~/admin`.
 
 ## Prima di fare qualsiasi cosa
 
@@ -66,15 +65,6 @@ sequenze `\uXXXX` nel testo scritto**, arrivano già convertite e possono romper
 limiti stanno in `DECISIONI.md`, 2026-10-06 e 2026-10-07 (la seconda rovescia la prima: niente più
 `cache-clock`).
 
-## L'hook di attribuzione
-
-`hooks/hooks.json` ha, accanto a `modules`, un `PreToolUse` su `Bash` che lancia
-`hooks/no-attribution.py`: blocca (exit 2) un `git commit`, `git merge`, `gh pr create` o `gh pr edit`
-con una riga `Co-Authored-By:`, `Claude-Session:` o «Generated with Claude», e non controlla
-nient'altro. Si prova con `bash hooks/no-attribution.test.sh`. Gira in ogni sessione dove il plugin è
-installato, a differenza dell'hook di `journal`; il perché in `DECISIONI.md`, 2026-11-06. Le altre due
-difese (`"attribution": false` utente e di progetto) stanno in `skills/commit/SKILL.md` §7.
-
 ## Installazione e distribuzione
 
 - In `~/admin` il plugin è installato con `scope=project`.
@@ -93,8 +83,7 @@ in chiaro e riprova. Legge **anche dentro gli heredoc**: un file che documenta c
 ## Convenzioni
 
 - Testo delle skill e commit in italiano. Formato dei commit: `tipo(area): descrizione`
-  (`feat(deferred): …`, `docs: …`, `feat!:` per un cambio di formato che rompe). Nessuna
-  attribuzione (`/dnz:commit` §7).
+  (`feat(deferred): …`, `docs: …`, `feat!:` per un cambio di formato che rompe).
 - **Qui si committa direttamente su `main`**, anche per le skill e il mod: è l'eccezione al default di
   `/dnz:commit` §6 («sul default solo documenti»), ed è come il repo ha sempre lavorato.
 - Ogni modifica di comportamento a una skill va registrata in `DECISIONI.md` con data e ragione,

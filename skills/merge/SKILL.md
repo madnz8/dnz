@@ -105,7 +105,6 @@ merge(fixes): merge branch 'batch/2026-06-27-bug-fixes' (ABC-48, ABC-49, ABC-50)
   un refactor che attraversa più aree sono ammessi `fixes` e `refactor`.
 - `<ticket>` sono i ticket coperti dal branch, separati da virgola: qui sta **il ticket dell'epic**,
   che i commit di story non ripetono. Se non ce ne sono, si omette la parentesi, senza inventarne.
-- **Nessuna attribuzione** nel messaggio di merge (`/dnz:commit` §7).
 
 A questo punto il branch di default **locale** è avanti, ma non ancora pushato. Resta così fino al
 passo 4, dove si decide insieme cosa farne.

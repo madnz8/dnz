@@ -182,8 +182,6 @@ scrivere i messaggi. Qui resta solo ciò che è proprio dello squash.
   deroghe. Assorbendo i fix dentro i gruppi, è l'unica cosa che andrebbe davvero persa.
 - **La provenienza di un commit di story è la story**, `(Story N.M)`. Il ticket dell'epic non si
   ripete su ogni gruppo: lo porta il commit di merge (`/dnz:merge`).
-- **Nessuna attribuzione nei body riscritti** (`/dnz:commit` §7): se i commit di partenza avevano
-  righe `Co-Authored-By:` o simili, non si portano nei nuovi.
 
 ### Poi fermati
 
