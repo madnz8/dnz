@@ -163,9 +163,9 @@ Lettore diverso, regole diverse. Non è il changelog tecnico tradotto in parole 
 **Una voce = una riga.** Massimo ~20 parole. Dice **cosa puoi fare adesso** oppure **cosa non ti
 succede più**. Mai il perché, mai il come, mai di chi era la colpa.
 
-> ✗ *"L'automatismo delle ricevute non funzionava: era un pezzo di libreria che non era stato
+> ✗ *"L'automatismo delle fatture non funzionava: era un pezzo di libreria che non era stato
 > copiato sul server. Ora funziona."*
-> ✓ *"Le ricevute della Questura arrivano da sole ogni mattina: non devi più avviarle a mano."*
+> ✓ *"Le fatture arrivano da sole ogni mattina: non devi più scaricarle a mano."*
 
 **Non entra:**
 
@@ -189,7 +189,7 @@ una versione scritta a metà. Se lo strumento del repo prende un titolo e delle 
 senza annunci passa **titolo vuoto e liste vuote**.
 
 **Il titolo della versione**, quando c'è, è una frase che dice cosa adesso funziona
-(*"Le ricevute della Questura arrivano da sole, ogni mattina"*), non un riassunto del diff.
+(*"Le fatture arrivano da sole, ogni mattina"*), non un riassunto del diff.
 
 **Le categorie sono tre: `Nuovo`, `Migliorato`, `Corretto`.** Se nel file ne trovi altre, è drift
 accumulato: non aggiungerne, usa queste tre.

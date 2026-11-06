@@ -40,6 +40,9 @@ check "commit con soggetto che nomina Generated with" \
   'git commit -m "docs: Generated with Claude spiegato nel README"' 0
 check "heredoc pulito" "git commit -F - <<'MSG'${nl}feat(ui): nuova scheda${nl}${nl}Il perché.${nl}MSG" 0
 check "JSON non valido" '' 0
+check "subject fuori formato" 'git commit -m "wip sistemato un po di cose"' 0
+check "commit di bmad-loop" 'git commit -m "story 2-3: implemented and reviewed via bmad-loop (iter 2)"' 0
+check "merge di bmad-loop" 'git merge --no-ff bmad-loop/2-3 -m "Merge bmad-loop/2-3"' 0
 
 # Bloccano
 check "-m ripetuto con trailer" \
