@@ -45,7 +45,8 @@ git branch --show-current                                                       
 - **History già ripulita**, se serviva. Non darlo per fatto: **contala**.
   ```bash
   git log --oneline "$DEF..$(git branch --show-current)" | wc -l
-  git log --oneline "$DEF..$(git branch --show-current)" | grep -cE '\(iter [0-9]+\)|start .*pipeline'
+  git log --format=%s "$DEF..$(git branch --show-current)" |
+    grep -cE '\(iter [0-9]+\)|start .*pipeline|implemented and reviewed via bmad-loop|^Merge bmad-loop/'
   ```
   Oltre una manciata di commit, o con anche un solo subject di impalcatura, **proponi
   `/dnz:squash-story` e fermati**: dopo il merge il branch è ancora lì, ma il suo contenuto è già
@@ -87,18 +88,24 @@ merge(<area>): merge branch '<nome-branch>' (<ticket>)
 di cosa è atterrato** — che è l'informazione che si cercava lì:
 
 ```
-merge(alloggiati): ricevute di deposito dalla Questura (RAW-62)
+merge(ordini): ricevute di pagamento dal gateway (ABC-62)
 ```
 
 È il motivo per cui non serve rinominare il branch prima del merge: il messaggio lo scriviamo noi,
 e può dire la cosa giusta indipendentemente da come si chiamava il ramo.
 
+Un batch di fix porta tutti i suoi ticket:
+
+```
+merge(fixes): merge branch 'batch/2026-06-27-bug-fixes' (ABC-48, ABC-49, ABC-50)
+```
+
 - `<area>` è l'**area di dominio** toccata dal lavoro, non il tipo conventional-commit: non
-  `fix`/`feat` ma il *dove* (`auth`, `billing`, `ui`, `refactor`, `docs`…). Deve essere una chiave a
-  bassa cardinalità che **ricorre nel tempo**: un'area torna per anni, un numero di ticket compare
-  in dieci commit e poi mai più.
-- `<ticket>` sono i ticket coperti dal branch, separati da virgola. Se non ce ne sono, si omette la
-  parentesi — non si inventa.
+  `fix`/`feat` ma il *dove*. Le regole sono quelle dello scope in `/dnz:commit` §2. Per un batch o
+  un refactor che attraversa più aree sono ammessi `fixes` e `refactor`.
+- `<ticket>` sono i ticket coperti dal branch, separati da virgola: qui sta **il ticket dell'epic**,
+  che i commit di story non ripetono. Se non ce ne sono, si omette la parentesi, senza inventarne.
+- **Nessuna attribuzione** nel messaggio di merge (`/dnz:commit` §7).
 
 A questo punto il branch di default **locale** è avanti, ma non ancora pushato. Resta così fino al
 passo 4, dove si decide insieme cosa farne.

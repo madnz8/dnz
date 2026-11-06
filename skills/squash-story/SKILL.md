@@ -123,7 +123,8 @@ intendeva fare** chi li ha scritti, e le decisioni prese in review vanno assorbi
 Il metodo serve a togliere le correzioni e l'impalcatura dalla history. Se ogni commit esistente è
 già una parte di lavoro per conto suo, ha un messaggio nel formato del repo e **nessuno** è una
 correzione, una review integrata o un subject di impalcatura (gli stessi che cerca `/dnz:merge` §1:
-`(iter N)`, `start … pipeline`), il raggruppamento che proporresti coincide con quello che c'è già.
+`(iter N)`, `start … pipeline`, `implemented and reviewed via bmad-loop`, `Merge bmad-loop/…`), il
+raggruppamento che proporresti coincide con quello che c'è già.
 Collassare darebbe lo stesso albero con SHA nuovi, e in cambio costa tag, reset, force-push, CI che
 riparte e PR da riscrivere.
 
@@ -166,23 +167,23 @@ viene prima dell'eleganza.
 
 ### I messaggi
 
-Formato: `<type>(<area>): <sintesi> (<provenienza>)`, con l'area presa da quelle che ricorrono nel
-repo. **Ignora i template delle pipeline** (`fix(story-6-1)`): mettono la story nello slot dello
-scope e perdono l'area.
+Formato, scope, provenienza, corpo e divieti sono quelli di **`/dnz:commit`**: caricala prima di
+scrivere i messaggi. Qui resta solo ciò che è proprio dello squash.
 
-**Nel body vanno le decisioni prese in review** — cosa ha deciso l'umano, quali deviazioni, quali
-deroghe. Assorbendo i fix dentro i gruppi, è l'unica cosa che andrebbe davvero persa.
-
-La provenienza è **la più specifica fra quelle che esistono**:
-
-1. **`(Story N.M)`** — il gruppo corrisponde a una story identificabile;
-2. **`(<TICKET>)`** — nessuna story ma un ticket nel tracker rilevato al passo 0;
-3. **`(epic N)`** — né story né ticket, ma un'unità di lavoro riconoscibile;
-4. **niente** — si omette la parentesi.
-
-⚠️ **Non fermarti a chiedere quando la provenienza non c'è, e non inventarne una.** Non tutti i repo
-hanno un tracker: l'assenza è un caso normale. Un messaggio senza parentesi è corretto; una
-provenienza inventata è un puntatore falso che qualcuno seguirà.
+- **Ignora i template delle pipeline.** Sono esattamente i subject da riscrivere: `fix(story-6-1)`
+  mette la story nello slot dello scope e perde l'area; quelli di `bmad-loop` non hanno né area né
+  provenienza:
+  ```
+  story <key>: implemented and reviewed via bmad-loop
+  Merge bmad-loop/…
+  … (iter N)
+  ```
+- **Nel body vanno le decisioni prese in review**: cosa ha deciso l'umano, quali deviazioni, quali
+  deroghe. Assorbendo i fix dentro i gruppi, è l'unica cosa che andrebbe davvero persa.
+- **La provenienza di un commit di story è la story**, `(Story N.M)`. Il ticket dell'epic non si
+  ripete su ogni gruppo: lo porta il commit di merge (`/dnz:merge`).
+- **Nessuna attribuzione nei body riscritti** (`/dnz:commit` §7): se i commit di partenza avevano
+  righe `Co-Authored-By:` o simili, non si portano nei nuovi.
 
 ### Poi fermati
 

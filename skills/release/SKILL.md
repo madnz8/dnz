@@ -29,6 +29,12 @@ Non c'è una risposta universale. **Rileva, non presumere**, in quest'ordine:
 4. **I changelog esistenti** — `ls CHANGELOG*` e dintorni: **quanti sono, in che lingua, in che
    formato.** Aprine uno e leggi l'ultima voce: il changelog nuovo va scritto come i precedenti,
    non come piace a te.
+
+   **Conta solo un changelog che il meccanismo di release scrive.** Se al punto 2 o 3 hai trovato
+   uno script o una configurazione, verifica quali percorsi scrive davvero. Un `CHANGELOG*` che
+   nessuno scrive, e la cui ultima voce è molte versioni indietro rispetto all'ultimo tag, è un
+   **fossile**: non si legge come modello e non si aggiorna. Segnalalo all'utente come candidato da
+   cancellare, e vai avanti con quelli vivi.
 5. **I tag** — `git tag --list | tail -5`: schema (`v1.2.3` o `1.2.3`) e da dove si riparte.
 
 Da qui escono **tre casi**, e va detto all'utente quale è:
@@ -118,9 +124,10 @@ quello giusto.
 
 SemVer, e **nel dubbio il più basso dei due**:
 
-- `patch` — bugfix, refactor interni, dipendenze, documentazione, modifiche non comportamentali;
-- `minor` — funzionalità nuove e visibili, nuovi endpoint o campi, cambi di schema, cambi di
-  comportamento retrocompatibili;
+- `patch` — bugfix, UI/CSS e testi, refactor interni, dipendenze, documentazione, modifiche non
+  comportamentali;
+- `minor` — funzionalità nuove e visibili, nuovi endpoint o campi, schema DB e migrazioni, cambi
+  di comportamento retrocompatibili;
 - `major` — rotture di compatibilità. **Fermati e chiedi**: non è una decisione da prendere di
   passaggio.
 
@@ -177,6 +184,10 @@ versione **compare lo stesso** nell'elenco — numero e data, così la storia no
 **senza titolo e senza voci**. Non inventare un titolo per riempire lo spazio, e soprattutto non
 scriverci che non è cambiato niente.
 
+**Titolo e voci sono tutti presenti o tutti assenti.** Un titolo senza voci, o voci senza titolo, è
+una versione scritta a metà. Se lo strumento del repo prende un titolo e delle liste, una versione
+senza annunci passa **titolo vuoto e liste vuote**.
+
 **Il titolo della versione**, quando c'è, è una frase che dice cosa adesso funziona
 (*"Le ricevute della Questura arrivano da sole, ogni mattina"*), non un riassunto del diff.
 
@@ -221,6 +232,9 @@ esplicita**. Senza strumento (§0b o procedura ricostruita) l'anteprima è: il f
 ## 6 — Applica
 
 Lancia il comando rilevato al passo 0, o i comandi del §0b.
+
+Il **commit di release** lo genera lo strumento (`chore: release vX.Y.Z` o simile) e resta fuori dal
+formato di `/dnz:commit`: non va «corretto». Vale solo il divieto di attribuzione (`/dnz:commit` §7).
 
 > ⚠️ Questo passo **pusha sul branch di default**, e con esso tutti i merge accumulati in locale. In
 > molti repo quel push fa partire un deploy: se il `CLAUDE.md` lo dice, ripetilo all'utente prima di

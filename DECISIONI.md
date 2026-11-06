@@ -45,6 +45,8 @@ sono compatibili con questo principio.
 | `audit` | ✅ 2026-09-22 | sale; metodologia separata dai fatti di lifehacker |
 | `journal` | ✅ 2026-09-22 | sale invariato; la più generale delle sette |
 | `create-ticket-linear` | ✅ 2026-11-02 | da atala; i fatti di Linear tornano nel `CLAUDE.md` del repo |
+| `commit` | ✅ 2026-11-06 | nuova; fonte unica delle convenzioni dei messaggi, con l'hook di attribuzione |
+| `create-branch` | ✅ 2026-11-06 | nuova; apre il branch, invocabile dal modello |
 
 ## Decisioni
 
@@ -1004,6 +1006,98 @@ repo: `lifehacker/CLAUDE.md` riga 43 nomina ancora `/dnz:deferred`. Le voci vecc
 restano col nome di allora.
 
 **Il nome vecchio smette di funzionare**, quindi è un cambio che rompe: `feat!:` e versione **3.0.0**.
+
+## 2026-11-06 — `commit` e `create-branch`; l'attribuzione si blocca su tre livelli
+
+Partiti da un `CLAUDE.md` di repo con circa 110 righe di convenzioni git e di release. Metà ripeteva le
+skill; l'altra metà erano regole che l'utente applica uguali su tutti i repo. Quella metà diventa
+**default del plugin**, così il `CLAUDE.md` si può accorciare; i fatti di quel repo (prefisso dei ticket,
+comando di release, deploy, percorsi dei changelog) restano lì e qui non entrano. Il piano iniziale
+era scritto su uno stato vecchio (v2.1.0, sette skill, `deferred`) ed è stato corretto prima di
+partire: le correzioni sono le scelte qui sotto.
+
+**`commit`, invocabile dal modello.** È la fonte unica: formato, scope come area dei file toccati,
+provenienza, corpo, template degli strumenti, dove si committa, attribuzione. `merge`, `squash-story` e
+`deferred-triage` rimandano a lei; il formato del merge commit resta in `merge`, quello del commit di
+release è dello strumento. Invocabile perché gli agenti dei giri automatici devono caricarla da soli
+prima di scrivere un messaggio. Novità rispetto a ciò che c'era: il codice condiviso prende l'area
+condivisa anche se il lavoro è nato su un modulo; il ticket dell'epic sta sul merge e non sui commit di
+story; subject entro 72 caratteri; sul default solo documenti, il prodotto passa da branch e PR.
+
+- **La provenienza resta a quattro livelli**, con `(epic N)`. La prima stesura ne elencava tre e toglieva
+  quello deciso il 2026-09-16 senza dirlo: non c'era un motivo, quindi resta.
+- **`dnz` è l'eccezione al «sul default solo documenti»**: qui si committa su `main`, ed è scritto nel
+  `CLAUDE.md` del repo, come la regola chiede.
+
+**`create-branch`, invocabile dal modello.** Nome scelto dall'utente (la prima stesura diceva
+`branch`). La prima stesura chiedeva `disable-model-invocation` «per coerenza» con `merge`, `release` e
+`squash-story`; ma la coerenza vera è la regola del 2026-11-02: una skill senza azioni irreversibili
+parte da sola. Aprire un branch non pusha e si annulla, e così serve anche ai giri di SuperPlane.
+Naming di default `feature/<ticket>-<slug>`, `feature/<slug>`, `batch/<data locale>-<tema>`, `fix/<slug>`,
+nessun branch per i soli documenti; vince quello del repo. Il riassunto dice se il branch nasce sopra
+merge non ancora pushati, che con `merge` sono la norma.
+
+**L'attribuzione, tre livelli.** Una skill invocabile non è garantita di essere caricata, quindi la
+regola serve eseguibile. Ma il web non vede i plugin (2026-09-28): l'hook da solo lascia scoperto
+proprio il caso cloud che motiva la regola. Verificato sulla documentazione corrente:
+
+1. **`"attribution": false`** in `~/.claude/settings.json`. La chiave è `attribution`;
+   `includeCoAuthoredBy` è deprecata dalla v2.0.62. `false` toglie trailer, testo della PR e link alla
+   sessione, e richiede la v2.1.281 (qui 2.1.319). Vale in ogni file di impostazioni.
+2. **La stessa chiave in `.claude/settings.json`, committata.** Una sessione cloud con un solo repo lo
+   legge, hook compresi; **non** nei thread di un *project* cloud. È l'unica difesa che arriva al web.
+3. **Hook del plugin**, `hooks/no-attribution.py`, come rete.
+
+**L'hook gira in ogni sessione dove il plugin è installato**, a differenza di quello di `journal`
+(2026-10-27), che si era scelto di tenere nel frontmatter perché misura solo i diari di chi invoca la
+skill. Qui la regola vale in ogni repo, quindi la sede è il plugin. Scelte:
+
+- **Stesso `hooks/hooks.json` del mod**: la reference dei mod ammette `hooks` accanto a `modules`.
+  Exit 2 su `PreToolUse` blocca la chiamata e passa stderr a Claude: verificato sulla documentazione e
+  dal vivo.
+- **Interviene solo su `git commit`, `git merge` (anche `git -C <dir> …`), `gh pr create` e `gh pr
+  edit`**; altrimenti esce subito. Le PR sono dentro perché l'harness ci mette il suo «Generated with».
+- **Match stretto**: la riga deve cominciare con `Co-Authored-By:`, `Claude-Session:` o «Generated with
+  Claude» (ammesso un simbolo davanti, l'emoji), a inizio riga o subito dopo le virgolette di un `-m`.
+  Così un messaggio che *nomina* la regola passa, a partire da quello di questo commit.
+  `Claude-Session:` non era nel piano: è la terza riga che l'harness aggiunge, e `attribution: false` la
+  toglie insieme alle altre.
+- **Legge il comando intero**, quindi `-m` ripetuti, heredoc e `-F -` sono coperti senza doverli
+  scomporre; con `-F <file>`, `--file=` e `--body-file` legge il file, se esiste.
+- **Non valida il formato del subject**: `bmad-loop` committa con template suoi durante i giri, e
+  bloccarli romperebbe il giro. Il formato lo sistema `squash-story`.
+- **Python 3, senza dipendenze**: JSON e regex in bash avrebbero chiesto `jq` e più fragilità.
+
+**Limiti noti.** Se `python3` manca, l'hook esce con 127, che non blocca: la regola resta alle altre
+due difese. Se manca il file `.py`, `python3` esce con 2 e bloccherebbe **ogni** Bash: succede solo con
+un plugin rotto, perché i file viaggiano insieme. Non vede un commit fatto dentro uno script lanciato da
+Bash, né uno scritto in un editor. Windows non provato. **Esiste solo dove il plugin è installato: da
+chiarire con l'utente se è installato sulla macchina dove girano SuperPlane e `bmad-loop`.**
+
+**Altre skill:**
+
+- `squash-story`: «I messaggi» rimanda a `commit`; restano i template da ignorare (con quelli di
+  `bmad-loop`), le decisioni di review nel corpo, la story come provenienza dei commit di story, il
+  divieto di attribuzione nei body riscritti.
+- `merge`: il conteggio dell'impalcatura prende anche `implemented and reviewed via bmad-loop` e
+  `^Merge bmad-loop/`, e passa da `--oneline` a `--format=%s`, perché con l'hash in testa l'ancora `^`
+  non avrebbe trovato niente. Esempio di batch; `fixes` e `refactor` ammessi come area trasversale;
+  l'esempio con un'area e un ticket di un repo vero diventa neutro.
+- `release`: nel bump, UI/CSS e testi sono `patch`, schema DB e migrazioni `minor`; un changelog conta
+  solo se il meccanismo di release lo scrive, e uno fermo a molte versioni fa è un fossile da segnalare;
+  nelle Novità titolo e voci tutti o niente; il commit di release è dello strumento.
+- `deferred-triage`: un rimando a `commit` per il messaggio.
+
+**Prova.** 23 test dello script (`bash hooks/no-attribution.test.sh`), scritti prima dello script e
+falliti prima che esistesse. `claude plugin validate .` passa (gli avvisi sono quelli della directory
+pubblica: README e icona). `claude plugin test .`: 34 su 34, con un fallimento intermittente nei test
+della card (1 su 6 esecuzioni, poi 0 su 5), che non tocca l'hook. Dal vivo, `claude -p --plugin-dir .`
+in un repo usa e getta: il commit con `-m 'Co-Authored-By: …'` è bloccato con il messaggio dell'hook,
+quello che cita la regola passa. **Non provato:** il livello 2 in una sessione web; le due skill nuove in
+un giro vero.
+
+`commit` e `create-branch` non nominano Linear se non come esempio di tracker, e il passo che lo usa si
+salta. Versione del plugin **3.1.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 
