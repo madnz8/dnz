@@ -1113,6 +1113,31 @@ sessione cloud non la legge: lì le righe tornano, a meno che il repo non commit
 
 Versione del plugin **3.2.0**.
 
+## 2026-11-10 — `merge` e `squash-story` partono anche dal modello
+
+**Rovescia in parte «Politica di invocazione» del 2026-09-25** e il «`merge` che non parte da solo,
+voluto» del 2026-10-04. L'utente vuole che i modelli lancino merge e squash in automatico, nei giri
+senza una persona che digita il comando. Tolto `disable-model-invocation: true` da `merge` e
+`squash-story`; **resta solo su `release`**, che l'utente non ha nominato.
+
+**Cosa tiene il freno, ora che non c'è più la digitazione.** Le skill non sono cambiate, e le loro
+fermate sono quelle che contano:
+
+- `merge`: non pusha di propria iniziativa (il passo 4 è una domanda con tre opzioni, e il push parte
+  solo con la prima); non cancella il branch; si ferma se la history non è pulita (§1) e se un ticket è
+  coperto solo in parte (§3);
+- `squash-story`: si ferma sul raggruppamento finché l'utente non conferma (§2), sui commenti di riga
+  aperti, sui merge dentro il branch, su un albero sporco che non è lavoro del branch; il gate del §5
+  prova l'albero identico prima del force-push, e il tag permette di tornare indietro.
+
+**Da sapere:** in un giro senza persona, il «aspetta la conferma» del §2 di `squash-story` e la domanda
+del §4 di `merge` non hanno nessuno che risponda. Se il giro deve andare fino in fondo da solo, è una
+scelta da scrivere nel prompt del giro (o nel `CLAUDE.md` del repo), non qualcosa che le skill
+presumono. Il force-push dello squash è ora raggiungibile senza che l'utente abbia digitato il comando:
+resta `--force-with-lease`, mai `--force`.
+
+Nessuna delle due nomina Linear in modo nuovo. Versione del plugin **3.3.0**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato

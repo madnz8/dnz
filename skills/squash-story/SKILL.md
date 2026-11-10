@@ -1,7 +1,6 @@
 ---
 name: squash-story
 description: "Collassa un branch in pochi commit funzionali ri-partendo l'albero finale, non aggregando i commit esistenti, e riallinea la PR. Da lanciare prima del merge, a review conclusa."
-disable-model-invocation: true
 ---
 
 # dnz:squash-story
