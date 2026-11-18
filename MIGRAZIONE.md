@@ -283,6 +283,31 @@ Aveva solo `release`. Ne riceve 7.
 
 ---
 
+## SuperPlane: la key del workspace (2026-11-18, plugin 3.4.0)
+
+`/dnz:superplane` cerca nel `CLAUDE.md` del repo la key del workspace di SuperPlane. Se non la trova,
+la ricava da `sp ws` o `sp find`, che funziona ma costa un giro a ogni sessione. Oggi i workspace sono
+due: **ATALA** (Atala Portal) e **PER** (Perimetro). Il prompt è lo stesso per i due repo, cambia solo
+la key. Prima di incollarlo, verifica con `/plugin` che `dnz` sia almeno alla 3.4.0.
+
+**atala-portal** — ha già una sezione «SuperPlane» (riga 78 al 2026-11-18): la riga va lì.
+
+> Aggiungi alla sezione «SuperPlane» del `CLAUDE.md` una riga: «Workspace SuperPlane: **ATALA**. Lo
+> stato dei task si legge con `/dnz:superplane`». Prima controlla con `sp ws` che la key sia ancora
+> `ATALA`: se è cambiata, vince quella. Nella stessa sezione, se dice ancora «skill
+> `dnz-create-ticket-linear`», sostituiscilo con `/dnz:create-ticket-linear`. Non aggiungere chiavi,
+> indirizzi o id di SuperPlane: la skill non deve averli.
+
+**perimetro** — il `CLAUDE.md` non nomina né SuperPlane né Linear, ma il workspace PER esiste e ha
+task (RAW-136 al 2026-11-18).
+
+> Aggiungi al `CLAUDE.md` una sezione breve «SuperPlane»: i ticket Linear con l'etichetta `agents`
+> li prende SuperPlane e li porta fino alla PR; il workspace è **PER**; lo stato dei task si legge con
+> `/dnz:superplane`, e per agire si passa da Linear o dalla sessione di `~/admin`. Prima controlla con
+> `sp ws` che la key sia ancora `PER`, e con `sp tasks PER all` che i ticket siano davvero di questo
+> repo. Se il repo usa un team Linear suo, scrivilo nella stessa sezione. Non aggiungere chiavi,
+> indirizzi o id di SuperPlane.
+
 ## Le tre copie a livello utente
 
 `~/.claude/commands/dnz/` contiene ancora `journal.md`, `merge.md` e `release.md`, non versionate.

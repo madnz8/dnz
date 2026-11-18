@@ -1192,7 +1192,7 @@ nome di flusso con lo spazio. **Non provato:** una domanda vera dello sviluppo (
 vero; un `sp` che nega l'accesso; la skill su una macchina senza `sp`.
 
 **Da fare:** il `CLAUDE.md` dei repo che usano SuperPlane (atala, perimetro) dovrebbe dire la key del
-workspace; il prompt va in `MIGRAZIONE.md`.
+workspace. Il prompt è in `MIGRAZIONE.md` (sezione «SuperPlane»), non ancora eseguito.
 
 Versione del plugin **3.4.0**.
 
