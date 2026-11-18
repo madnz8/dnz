@@ -1,7 +1,8 @@
 # dnz
 
-Plugin Claude Code con dieci skill `/dnz:*` (`commit`, `create-branch`, `merge`, `release`,
-`squash-story`, `deferred-triage`, `audit`, `ui-check`, `journal`, `create-ticket-linear`), in
+Plugin Claude Code con undici skill `/dnz:*` (`commit`, `create-branch`, `merge`, `release`,
+`squash-story`, `deferred-triage`, `audit`, `ui-check`, `journal`, `create-ticket-linear`,
+`superplane`), in
 `skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il prompt (`hooks/`, vedi sotto). Il
 repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz` (privato). Si lavora **solo da qui**, non più da `~/admin`.
 
@@ -21,10 +22,11 @@ se la rovesci, aggiungi una voce datata che dice cosa cambia e perché, senza ca
   se nomina Linear. L'eccezione è `create-ticket-linear`, dove il ticket è lo scopo: senza Linear si
   ferma.
 - `disable-model-invocation: true` solo su `release` (rilascia: parte solo se la digiti). Le altre
-  nove restano invocabili dal modello. `merge` e `squash-story` lo erano di meno fino al 2026-11-10:
+  dieci restano invocabili dal modello. `merge` e `squash-story` lo erano di meno fino al 2026-11-10:
   ora partono anche da sole, e le loro fermate interne (conferma dei gruppi, domanda su come chiudere,
   ticket coperto in parte, commenti di riga aperti) restano il freno. `create-ticket-linear` scrive su
-  Linear solo dopo l'ok dell'utente; `create-branch` non pusha.
+  Linear solo dopo l'ok dell'utente; `create-branch` non pusha; `superplane` legge e basta (`sp`, solo
+  su rings).
 - `commit` è la fonte unica delle convenzioni dei messaggi: `merge`, `squash-story` e
   `deferred-triage` rimandano lì invece di ripeterle. Una regola sui messaggi si cambia in `commit`.
 - `journal` è l'unica skill con un hook nel frontmatter: `check-entry.sh` (PostToolUse su `Write|Edit`)

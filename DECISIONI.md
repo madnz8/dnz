@@ -47,6 +47,7 @@ sono compatibili con questo principio.
 | `create-ticket-linear` | ✅ 2026-11-02 | da atala; i fatti di Linear tornano nel `CLAUDE.md` del repo |
 | `commit` | ✅ 2026-11-06 | nuova; fonte unica delle convenzioni dei messaggi; attribuzione tolta lo stesso giorno |
 | `create-branch` | ✅ 2026-11-06 | nuova; apre il branch, invocabile dal modello |
+| `superplane` | ✅ 2026-11-18 | nuova; sola lettura di SuperPlane con `sp`, confronto con Linear |
 
 ## Decisioni
 
@@ -1137,6 +1138,63 @@ presumono. Il force-push dello squash è ora raggiungibile senza che l'utente ab
 resta `--force-with-lease`, mai `--force`.
 
 Nessuna delle due nomina Linear in modo nuovo. Versione del plugin **3.3.0**.
+
+## 2026-11-18 — `superplane`: l'undicesima skill, sola lettura
+
+Le sessioni di progetto non sapevano cosa succede in SuperPlane, il sistema che su rings prende i
+ticket Linear con l'etichetta `agents` e li porta fino alla PR. Linear ne mostra metà (presa in carico,
+domande, ripartenza, merge); i check, le esecuzioni dei flussi e gli errori stanno solo in SuperPlane.
+Lo strumento c'è già: `sp`, gestito da `~/admin`, che sa fare solo GET.
+
+**Le regole vengono dall'utente**, la skill le mette in procedura: lo stato vero è in `sp`; un ticket
+aperto con `agents` e senza un task vivo è **bloccato**, non in coda, e lo sblocca la sessione di
+`~/admin`; la domanda dello sviluppo sta nel check «Sviluppo» e si riporta intera; si risponde con un
+commento su Linear sotto la domanda; se `sp` manca o nega l'accesso ci si ferma, senza `curl`, browser o
+credenziali trovate sul disco.
+
+**Scelte prese leggendo l'uscita vera di `sp`** (ATALA e PER, oggi):
+
+- **`sp tasks <WS>` da solo mostra solo gli aperti.** RAW-128 ha un task in `draft` (43) e uno
+  archiviato (33): partendo dal default il `draft` non si vede. La skill parte da `all`.
+- **`draft` non è nelle regole dell'utente.** Dagli eventi del 43 è un task creato dal «Linear poller»
+  e non ancora mandato a una linea. La skill lo riporta con l'età e, se è vecchio, chiede all'utente
+  invece di decidere cosa significa. Non lo chiama bloccato.
+- **`sp find` su un ticket senza task esce con 0** e una frase morbida («il poller non l'ha ancora preso
+  o qualcosa lo blocca»). Il controllo si fa sul testo, e il verdetto è quello dell'utente: bloccato.
+- **`sp task <WS> RAW-n` con più task mostra il più recente** e lo dice solo su stderr. La skill passa
+  prima da `sp find`, poi chiede il task per numero.
+- **Ogni errore di `sp` ferma la skill**, non solo «accesso negato»: chiave assente e SuperPlane che non
+  risponde escono nello stesso modo (`sp: …`, codice 1), e nessuno dei tre si sistema da una sessione
+  di progetto. L'eccezione è un argomento sbagliato.
+- **Un check che dice «rilancia …»** (il 24 di ATALA ne ha uno `critical`) è un'istruzione per la
+  sessione di `~/admin`: la skill la riporta e dice dove si agisce.
+- **Niente chiavi, indirizzi o id d'organizzazione nella skill né qui.** Stanno nello script di
+  `~/admin`; scriverli darebbe a una sessione proprio quello che la regola le vieta.
+
+**Fatti di repo e fatti di SuperPlane.** La key del workspace (ATALA, PER) è un fatto del repo: il §0 la
+cerca nel `CLAUDE.md` e, se manca, la ricava da `sp ws` o `sp find`. L'etichetta `agents` e la sessione
+di `~/admin` invece sono fatti di **SuperPlane**, uguali per ogni repo, e la skill li nomina. È una
+differenza voluta da `create-ticket-linear`, dove l'etichetta di via resta generica perché quella skill
+serve anche dove SuperPlane non c'è; questa senza SuperPlane non ha niente da fare.
+
+**Linear: facoltativo, come nelle altre.** Senza connettore si parte dal workspace e il confronto del §2
+non si fa, ma la skill lo dice: altrimenti «nessun ticket bloccato» sembrerebbe un fatto controllato.
+Su Linear scrive solo un commento che l'utente ha dettato, dopo averglielo mostrato; l'etichetta
+`agents` non la tocca mai, perché metterla o toglierla fa partire o fermare SuperPlane.
+
+**Invocazione: aperta.** Legge e basta, quindi rientra nella regola del 2026-11-02. La `description`
+dice anche cosa non fa (non scrive, non sblocca, solo dove c'è `sp`), per la lezione di `deferred-triage`.
+
+**Prova.** Letti con `sp` i casi che la skill descrive: RAW-147 (task 42 `open`, cinque check, PR #134),
+RAW-128 (`draft` più archiviato), RAW-999 (nessun task), il check `critical` del 24, `sp runs` con un
+nome di flusso con lo spazio. **Non provato:** una domanda vera dello sviluppo (oggi nessun check
+«Sviluppo» non positivo, quindi la skill non ne descrive la forma); il confronto con Linear in un giro
+vero; un `sp` che nega l'accesso; la skill su una macchina senza `sp`.
+
+**Da fare:** il `CLAUDE.md` dei repo che usano SuperPlane (atala, perimetro) dovrebbe dire la key del
+workspace; il prompt va in `MIGRAZIONE.md`.
+
+Versione del plugin **3.4.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 
