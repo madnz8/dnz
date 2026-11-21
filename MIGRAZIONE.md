@@ -308,6 +308,24 @@ task (RAW-136 al 2026-11-18).
 > repo. Se il repo usa un team Linear suo, scrivilo nella stessa sezione. Non aggiungere chiavi,
 > indirizzi o id di SuperPlane.
 
+## atala: `dnz-sweep-epic` sale nel plugin (2026-11-21, plugin 3.5.0)
+
+La skill di progetto `dnz-sweep-epic` è ora `/dnz:deferred-sweep-epic`, con lo script generalizzato:
+il track da escludere non è più scritto dentro, lo dice il `CLAUDE.md` del repo. Prima di incollare il
+prompt, verifica con `/plugin` che `dnz` sia almeno alla 3.5.0.
+
+> La skill di progetto `.claude/skills/dnz-sweep-epic/` è salita nel plugin `dnz` come
+> `/dnz:deferred-sweep-epic`. Nel `CLAUDE.md`, sezione sul registro dei rinvii, accanto alla riga sui
+> due track, aggiungi: «Per `/dnz:deferred-sweep-epic` si esclude il track Alloggiati: `--exclude
+> "track RAW-31"`. Il track `LEGACY presence-manager` è il principale e non si esclude.» Poi prova la
+> skill nuova **senza lanciare lo sweep**: `/dnz:deferred-sweep-epic <un'epic chiusa>` fino alla
+> conferma del §3, e confronta gli id con quelli della copia vecchia
+> (`python3 -I .claude/skills/dnz-sweep-epic/select_deferred.py <N>`): devono esserci tutti, e le
+> aggiunte sono voci con `Epic N` nell'`origin:` o nate da un rinvio (`[via DW-…]`). Se torna, togli
+> la copia vecchia (`git rm -r .claude/skills/dnz-sweep-epic`), cerca altri rimandi vivi
+> (`git grep -n dnz-sweep-epic`) e aggiornali; lascia com'è ciò che è storia: `deferred-work.md`, le
+> retro, i changelog. Un commit: `chore(skills): dnz-sweep-epic sale nel plugin dnz`.
+
 ## Le tre copie a livello utente
 
 `~/.claude/commands/dnz/` contiene ancora `journal.md`, `merge.md` e `release.md`, non versionate.

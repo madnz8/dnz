@@ -1,8 +1,8 @@
 # dnz
 
-Plugin Claude Code con undici skill `/dnz:*` (`commit`, `create-branch`, `merge`, `release`,
-`squash-story`, `deferred-triage`, `audit`, `ui-check`, `journal`, `create-ticket-linear`,
-`superplane`), in
+Plugin Claude Code con dodici skill `/dnz:*` (`commit`, `create-branch`, `merge`, `release`,
+`squash-story`, `deferred-triage`, `deferred-sweep-epic`, `audit`, `ui-check`, `journal`,
+`create-ticket-linear`, `superplane`), in
 `skills/<nome>/SKILL.md`, e un mod che disegna una card sopra il prompt (`hooks/`, vedi sotto). Il
 repo è anche il marketplace che li distribuisce: `github.com/madnz8/dnz` (privato). Si lavora **solo da qui**, non più da `~/admin`.
 
@@ -22,16 +22,19 @@ se la rovesci, aggiungi una voce datata che dice cosa cambia e perché, senza ca
   se nomina Linear. L'eccezione è `create-ticket-linear`, dove il ticket è lo scopo: senza Linear si
   ferma.
 - `disable-model-invocation: true` solo su `release` (rilascia: parte solo se la digiti). Le altre
-  dieci restano invocabili dal modello. `merge` e `squash-story` lo erano di meno fino al 2026-11-10:
+  undici restano invocabili dal modello. `merge` e `squash-story` lo erano di meno fino al 2026-11-10:
   ora partono anche da sole, e le loro fermate interne (conferma dei gruppi, domanda su come chiudere,
   ticket coperto in parte, commenti di riga aperti) restano il freno. `create-ticket-linear` scrive su
   Linear solo dopo l'ok dell'utente; `create-branch` non pusha; `superplane` legge e basta (`sp`, solo
-  su rings).
+  su rings); `deferred-sweep-epic` lancia lo sweep solo dopo l'ok sugli id e sul costo.
 - `commit` è la fonte unica delle convenzioni dei messaggi: `merge`, `squash-story` e
   `deferred-triage` rimandano lì invece di ripeterle. Una regola sui messaggi si cambia in `commit`.
 - `journal` è l'unica skill con un hook nel frontmatter: `check-entry.sh` (PostToolUse su `Write|Edit`)
   misura la voce aperta del diario. Si prova con `bash skills/journal/check-entry.test.sh`. Un hook di
   skill si registra quando la skill viene invocata, regge a `/compact` ma non a `claude --resume`.
+- `deferred-sweep-epic` ha uno script, `select_deferred.py`, che sceglie le voci di un'epic; la skill
+  lo richiama con `${CLAUDE_SKILL_DIR}`. Si prova con
+  `python3 skills/deferred-sweep-epic/select_deferred.test.py`.
 - Il prefisso `dnz:` lo dà il plugin, non la cartella: una skill copiata in `.claude/skills/merge/`
   si chiamerebbe `/merge`.
 

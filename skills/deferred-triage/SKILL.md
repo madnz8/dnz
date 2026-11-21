@@ -601,7 +601,8 @@ contro il codice e le partiziona (risolta, da costruire, bloccata, da scartare, 
 **esegue** i gruppi di voci con sessioni di sviluppo sue; gira in automatico e non scrive niente per
 una persona. Questa skill fa la parte che lo sweep non fa: il piano per chi decide (il «perché
 adesso», i lavori scartati, le domande secche) e il non-lavoro. Non lanciare lo sweep da qui, e non
-scrivere nel registro mentre un run è in corso (precondizioni). Se in un repo vuoi che la skill si
+scrivere nel registro mentre un run è in corso (precondizioni). Per lo sweep dei soli rinvii di
+un'epic chiusa c'è `/dnz:deferred-sweep-epic`. Se in un repo vuoi che la skill si
 limiti al piano e lasci la verifica allo sweep, è una scelta da prendere e scrivere in `DECISIONI.md`,
 non da improvvisare in un giro.
 

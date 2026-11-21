@@ -48,6 +48,7 @@ sono compatibili con questo principio.
 | `commit` | ✅ 2026-11-06 | nuova; fonte unica delle convenzioni dei messaggi; attribuzione tolta lo stesso giorno |
 | `create-branch` | ✅ 2026-11-06 | nuova; apre il branch, invocabile dal modello |
 | `superplane` | ✅ 2026-11-18 | nuova; sola lettura di SuperPlane con `sp`, confronto con Linear |
+| `deferred-sweep-epic` | ✅ 2026-11-21 | da atala (`dnz-sweep-epic`); sceglie i DW di un'epic e lancia `bmad-loop sweep --only` |
 
 ## Decisioni
 
@@ -1195,6 +1196,100 @@ vero; un `sp` che nega l'accesso; la skill su una macchina senza `sp`.
 workspace. Il prompt è in `MIGRAZIONE.md` (sezione «SuperPlane»), non ancora eseguito.
 
 Versione del plugin **3.4.0**.
+
+## 2026-11-21 — `deferred-sweep-epic`: la dodicesima skill, da atala
+
+L'utente la voleva nel plugin. In atala stava in `.claude/skills/dnz-sweep-epic/` (71 righe di skill,
+68 di script, dal 2026-11-04). Fa una cosa sola che `bmad-loop` non sa fare: limitare uno sweep a
+un'epic. `bmad-loop sweep` sceglie per id (`--only`) o per gravità, e `[sweep] auto = "per-epic"`
+guarda tutto il registro. La skill ricava gli id dell'epic, li mostra, e dopo l'ok lancia
+`sweep --only`.
+
+**Confronto con `dnz-fix-batch` di subtxt**, che l'utente aveva chiesto prima di decidere: non è la
+stessa cosa. `fix-batch` orchestra un lotto di difetti qualsiasi (retro, prove a mano, liste) con
+subagent suoi, file di stato, review finale e PR in bozza; questa sceglie voci del registro e passa
+la mano a `bmad-loop`, che prima verifica ogni voce sul codice (risolta, da fare, bloccata, decisione)
+e poi chiude il registro da sé. Si sovrappongono solo sui rinvii di un'epic, e lì vince lo sweep.
+`fix-batch` resta in subtxt; non è nel plugin.
+
+**Nome: `deferred-sweep-epic`.** L'utente voleva un nome che non si confondesse con gli altri, anche
+lungo. Sta accanto a `deferred-triage` quando si digita `/dnz:def`, e dice registro, sweep ed epic.
+
+**Cosa è cambiato rispetto alla copia di atala**, ciascuna con la sua ragione:
+
+- **I fatti di atala escono dallo script.** Il track `RAW-31` e la soglia «epic ≤ 6» erano scritti
+  dentro. Ora c'è `--exclude <testo dell'origin:>`, ripetibile, e quale track escludere lo dice il
+  `CLAUDE.md` del repo. In atala si esclude **solo** `track RAW-31 Alloggiati`: `track LEGACY
+  presence-manager` è il principale (lo dice il suo `CLAUDE.md`), non un track da togliere. Escludere
+  sempre invece che solo per epic ≤ 6 dà gli stessi risultati: misurato su tutte le epic da 1 a 35.
+- **Il pattern delle epic era tarato su atala.** Misurato sui tre registri DW: atala 329 voci aperte,
+  176 attribuite; subtxt 28 e 26; perimetro 26 e 14. Mancavano `Epic N` con lo spazio
+  nell'`origin:` (le review delle PR in atala) ed `epica N` (perimetro).
+- **I rinvii nati da un rinvio ereditano l'epic** (scelta dell'utente). Una voce senza epic sua
+  prende quella della voce da cui viene, anche su più livelli, con un riparo dai cicli. Il rimando
+  può avere tre forme: `origin: review di DW-24`, `source_spec: spec-dw-24-…`, oppure
+  `spec-dw-<nome-del-gruppo>.md` senza numero. Il nome lo sceglie la sessione di sviluppo dello
+  sweep, quindi il numero non è garantito: in atala 6 voci erano così (`spec-dw-restore-db-matches-dump`).
+  Queste si risolvono con i `triage.json` dei giri (`.bmad-loop/runs/*/`), dove ogni gruppo ha nome e
+  `dw_ids`; un file illeggibile si salta. Senza la catena il «secondo giro» della skill non vedeva
+  proprio quello che il primo giro aveva rinviato: 7 delle 12 voci orfane di perimetro erano così.
+- **Risultato in atala**, con `--exclude "track RAW-31"`: le voci aperte attribuite a un'epic passano
+  da 176 a 205, e nessuna voce prima attribuita si perde (confronto vecchio/nuovo, epic per epic). Le
+  107 voci di RAW-31 risultano escluse invece che orfane; le orfane vere sono 17, tutte migrate dal
+  registro vecchio e nate fuori da un'epic (quick-dev, spec di singole funzioni). Le aggiunte
+  controllate a mano: `Epic 6` e `Epic 18` nelle review delle PR, catene come DW-389 → DW-377 e
+  DW-343 → il gruppo `restore-db-matches-dump` (DW-257…259).
+- **Lo script dice anche quello che non prende o che va guardato**: quante voci aperte sono di
+  nessuna epic, con gli id; quali nominano anche un'altra epic (`[anche epic M]`, 4 in atala); quali
+  hanno già una riga `decision:`, cioè una scelta umana (`[decision: …]`: 59 voci aperte in atala, 6
+  in perimetro, spesso il non-lavoro segnato da `deferred-triage` con `keep-open`).
+- **Il §4 descriveva un lancio che non si usava.** La copia di atala diceva: in primo piano, senza
+  `--no-prompt`, le decisioni le prende l'utente. Degli 8 sweep con `--only` in atala (dal
+  2026-11-10, tutti `trigger: cli`; uno si è fermato all'avvio), 7 hanno `prompting: false`, che nel
+  sorgente di `bmad-loop` 0.13.2 vale esattamente `not --no-prompt`; in uno, 6 decisioni sono state
+  saltate (`decision-skipped-unattended`). Che siano partiti dalla skill non si può dimostrare. E un
+  giro dura ore (da 40 minuti a quasi 5), mentre un comando in primo piano dell'agente si ferma a 10
+  minuti. Il segnale di fine giro è `bmad-loop ls`, che vale anche se il comando ritorna prima. Ora due modi: lo lancia
+  l'utente nel suo terminale, o l'agente in background con `--no-prompt`, e le decisioni saltate si
+  danno dopo con `bmad-loop decisions`. Dal sorgente: `close` chiude subito, `build` e `keep-open`
+  restano salvate per lo sweep successivo, che quindi va rilanciato.
+- **Il costo si mostra prima dell'ok**: dai soli sweep precedenti del repo (le cartelle con
+  `sweep.json`; inizio dal nome della cartella, fine e token dalla riga `run finished`), con l'ordine
+  di grandezza di atala come riferimento.
+- **§0 «Orientati»** come nelle altre: registro, formato DW, `bmad-loop` presente, track, branch di
+  default. Fuori dal mondo C la skill si ferma.
+- **Allineata a `deferred-triage`**: «nessun run in corso» si controlla con `bmad-loop ls`, come lì.
+  Il «non scrivere a mano `deferred-work.md`, è del solo bmad-loop» contraddiceva `deferred-triage`,
+  che nel mondo C chiude voci a mano (2026-10-06): ora dice che **questa skill** non lo scrive.
+  `deferred-triage` ha una riga che rimanda qui.
+
+**Uno script nel plugin, contro «Niente script nel plugin» del 2026-09-28.** Quella scelta valeva per
+`deferred`, dove era caduto il lavoro che lo script doveva fare. Qui il lavoro c'è: il registro di
+atala ha 396 voci e byte NUL, e attribuirle a occhio sbaglia. Lo script è Python 3 senza dipendenze,
+come l'hook che c'era il 2026-11-06, e ha 33 test (`select_deferred.test.py`), scritti prima e falliti
+prima che lo script esistesse, sulle tre forme di registro. Una review dedicata (`python-reviewer`) ha
+trovato tre difetti veri, corretti con un test ciascuno: una voce spariva se un NUL le stava davanti
+sulla stessa riga o se l'intestazione non aveva titolo; `spec-dw-2fa-…` era letto come rimando a DW-2;
+`via` nominava anche rimandi che non portavano l'epic. Sistemati anche: un `#` qualunque chiude la voce,
+un `triage.json` illeggibile si dice su stderr, fra due giri con lo stesso nome di gruppo vale il più
+recente, `--exclude ""` è un errore. **Lasciati:** nessuna cache sulla catena (cicli già riparati,
+catene vere corte) e una voce che può essere insieme dubbia e orfana. La skill lo richiama con
+`${CLAUDE_SKILL_DIR}`: provato con un plugin finto e `claude -p --plugin-dir`, la variabile arriva
+espansa nel testo della skill (e anche `${CLAUDE_PLUGIN_ROOT}`).
+
+**Invocazione: aperta**, per la regola del 2026-11-02. Non è distruttiva: lo sweep committa su un
+branch di lavoro e non pusha. È costosa, e il freno è la conferma del §3, che mostra id e costo.
+
+**Linear:** non lo nomina.
+
+**Non provato:** un giro vero della skill dal plugin; la skill in subtxt e in perimetro (lo script sì,
+sui loro registri); `bmad-loop decisions` seguito dal secondo sweep che costruisce le risposte `build`
+(letto nel sorgente, non visto girare).
+
+**Da fare:** in atala togliere la copia locale e scrivere nel `CLAUDE.md` l'esclusione del track
+RAW-31. Il prompt è in `MIGRAZIONE.md`.
+
+Versione del plugin **3.5.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 
