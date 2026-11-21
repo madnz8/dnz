@@ -1291,6 +1291,56 @@ RAW-31. Il prompt è in `MIGRAZIONE.md`.
 
 Versione del plugin **3.5.0**.
 
+## 2026-11-21 — `deferred-sweep-epic`: prima le domande, un solo giro che costruisce
+
+Partiti da un testo suggerito all'utente, scritto su atala (il «5.2 Sweep dei rinvii dell'epic»).
+Il metodo sale; i fatti di atala no. **Rovescia il «secondo giro» della voce precedente**, dello
+stesso giorno.
+
+**Cosa cambia nella skill:**
+
+- **§3, una scelta prima della conferma.** Non tutte le voci certe valgono un giro da ore e milioni di
+  token. La skill propone due liste, dentro e fuori, una riga per voce. Default: dentro gravità
+  `medium` o più, bug di correttezza, voci da fare prima del rilascio, voci già decise per costruire;
+  fuori rifiniture, limiti rari, ottimizzazioni, voci del merge, `keep-open`, voci di una storia
+  futura. Le marcature («prima del rilascio», «prima del merge») le dà il `CLAUDE.md` del repo.
+- **§4, un giro di sole domande prima di costruire**: `sweep --decisions-only --no-prompt`, poi
+  `decisions --list --json`. Verificato nel sorgente di `bmad-loop` 0.13.2: con `--decisions-only` il
+  giro si ferma dopo la fase delle decisioni (`sweep-decisions-only`) e non costruisce niente; con
+  `--no-prompt` le decisioni restano in sospeso e `decisions` le elenca. Questo chiude il buco del modo
+  «dall'agente» della voce di prima, che costruiva, saltava le decisioni e chiedeva un secondo giro.
+- **Le risposte una per volta**, con `printf '<chiave>\n' | bmad-loop decisions` e un ricontrollo
+  della lista. Dal sorgente: `decisions` pone le domande in sospeso in ordine, quindi una risposta
+  passata da stdin va alla prima; con più risposte in fila una domanda che cambia posto prende la
+  risposta di un'altra.
+- **Le domande coperte da una regola scritta le risponde l'agente**, e lo dice nel riassunto con la
+  regola usata. Il testo di partenza diceva «scarta e risolvi da solo»; qui serve una regola **scritta**
+  (il `CLAUDE.md` del repo o una `decision:` registrata), altrimenti l'agente decide al posto
+  dell'utente senza traccia. Le altre vanno all'utente in un messaggio solo, con la raccomandazione.
+- **§5, un solo giro che costruisce.** Un secondo giro solo se la costruzione si ferma su un dubbio
+  nuovo. Le voci nate durante il giro non si inseguono: restano allo sweep della prossima epic o a
+  `deferred-triage`. Ragione: il costo (da 8 a 17 milioni di token a giro in atala), e un giro in più
+  per voci appena nate, di solito minori, raramente lo vale. La catena dello script resta: serve a
+  riconoscerle e a prenderle nello sweep dopo.
+- **`--only` con un id chiuso rifiuta l'intero giro** («--only ids must exist and be open», dal
+  sorgente). Il §4 chiude voci (risolte nel codice, risposte `close`), quindi il §5 rilancia lo script
+  e passa solo gli id ancora aperti.
+
+**Cosa non è salito, e perché:**
+
+- **I fatti di atala** (check-in inviato che non si modifica, data di nascita mai salvata su presenza o
+  meditatore, il nome dell'utente): sono regole di dominio di quel repo e vanno nel suo `CLAUDE.md`. La
+  skill li legge al §0. Prompt in `MIGRAZIONE.md`.
+- **«Diventano un criterio di quella storia in `epics.md`»**: scrivere nei documenti di pianificazione
+  esce dal perimetro della skill. Resta una proposta all'utente; la voce resta aperta.
+- **tmux**: è un fatto di macchina. La skill dice «in background» e usa `bmad-loop ls` come segnale di
+  fine, che vale comunque lo si lanci.
+
+**Non provato:** `printf | bmad-loop decisions` su una decisione vera (oggi atala non ne ha in sospeso,
+e da qui atala non si scrive): la prova è nel prompt di atala. Né un giro intero §3–§5.
+
+Versione del plugin **3.6.0**.
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato

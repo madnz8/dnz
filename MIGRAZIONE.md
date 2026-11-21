@@ -326,6 +326,20 @@ prompt, verifica con `/plugin` che `dnz` sia almeno alla 3.5.0.
 > (`git grep -n dnz-sweep-epic`) e aggiornali; lascia com'è ciò che è storia: `deferred-work.md`, le
 > retro, i changelog. Un commit: `chore(skills): dnz-sweep-epic sale nel plugin dnz`.
 
+**Dalla 3.6.0** la skill sceglie le voci che valgono un giro e risolve le decisioni prima di
+costruire; per farlo legge dal `CLAUDE.md` del repo le marcature e le regole di dominio. Prompt da
+aggiungere, nella stessa sessione o dopo:
+
+> Nel `CLAUDE.md`, sezione sul registro dei rinvii, aggiungi un blocco «Sweep dei rinvii di un'epic»
+> per `/dnz:deferred-sweep-epic`: le marcature delle voci che usate («prima del rilascio» entra nello
+> sweep; «prima del merge», cioè squash, chiusura delle epic, ui-check, si fa al merge del branch e
+> resta fuori) e le **regole di dominio già decise** che rispondono da sole alle domande del triage
+> (per esempio: un check-in inviato non si modifica; la data di nascita non si salva su presenza o
+> meditatore). Scrivi solo regole che sono davvero decise, con dove sono state decise; nel dubbio
+> lasciale fuori, la skill chiederà. Alla prima decisione vera in sospeso, prova
+> `printf '<chiave>\n' | bmad-loop decisions` e controlla con `bmad-loop decisions --list` che sia
+> sparita quella giusta; se non va, dillo nella sessione di `dnz`.
+
 ## Le tre copie a livello utente
 
 `~/.claude/commands/dnz/` contiene ancora `journal.md`, `merge.md` e `release.md`, non versionate.
