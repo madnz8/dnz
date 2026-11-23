@@ -1,6 +1,6 @@
 {
   "name": "dnz",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "description": "Tredici comandi per il lavoro su un repo (apertura del branch, convenzioni dei commit, squash della history, merge, release con changelog, triage dei rinvii, chiusura della retro e sweep dei rinvii di un'epic, audit, verifica visiva della UI, diario di bordo, apertura di ticket Linear, lettura di SuperPlane) e una card sopra il prompt con modello, contesto, limiti, branch, costo e tempo alla scadenza della cache. Le skill rilevano le convenzioni del repo invece di presumerle.",
   "author": {
     "name": "Daniele Bolletta"

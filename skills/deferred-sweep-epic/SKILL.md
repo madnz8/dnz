@@ -1,6 +1,6 @@
 ---
 name: deferred-sweep-epic
-description: "Sweep dei rinvii (deferred-work.md, formato `### DW-<n>:` di bmad-loop) di una sola epic chiusa: trova le voci aperte di quell'epic, comprese quelle nate da altri rinvii e le azioni della retro, propone quali valgono un giro, fa emergere e risolvere le decisioni prima di costruire (i consigli per le storie future con bmad-correct-course), e dopo l'ok lancia un solo `bmad-loop sweep --only` con quegli id. Usala a fine epic, con il numero dell'epic, dopo /dnz:resolve-epic-retro. Non fa il triage di tutto il registro e non scrive piani (quello è deferred-triage), non scrive nel registro e non serve a rinviare un finding."
+description: "Sweep dei rinvii di una sola epic chiusa (deferred-work.md nel formato `### DW-<n>:` di bmad-loop): sceglie con l'utente le voci che valgono un giro, risolve prima le decisioni e lancia un solo `bmad-loop sweep --only`. Usala a fine epic, con il numero dell'epic, dopo /dnz:resolve-epic-retro. Non fa il triage di tutto il registro (è deferred-triage), non scrive nel registro e non serve a rinviare un finding."
 ---
 
 # dnz:deferred-sweep-epic
@@ -9,13 +9,9 @@ description: "Sweep dei rinvii (deferred-work.md, formato `### DW-<n>:` di bmad-
 registro, e `bmad-loop sweep` sceglie solo per id (`--only`) o per gravità (`--min-severity`). Questa
 skill fa la parte che manca: ricava gli id dell'epic, tiene quelli che valgono un giro, porta le
 decisioni all'utente **prima** di costruire, e lancia un solo giro con `--only`. Le voci delle altre
-epic non si toccano.
+epic non si toccano: il triage di tutto il registro è `/dnz:deferred-triage`.
 
 Argomento: il numero dell'epic (`/dnz:deferred-sweep-epic 28`).
-
-> **Cosa non è.** Il triage di tutto il registro, con il piano per chi decide e il non-lavoro, è
-> `/dnz:deferred-triage`. Rinviare un finding lo fanno BMAD e `bmad-loop`. Questa skill sceglie le
-> voci e lancia lo sweep: il registro lo scrive `bmad-loop`, non lei.
 
 ## 0 — Orientati
 
@@ -70,11 +66,8 @@ python3 -I "${CLAUDE_SKILL_DIR}/select_deferred.py" <N> --ledger <registro> [--b
 Su Windows, se `python3` non c'è, `py -3` o `python`. Lo script stampa:
 
 - **certe**: voci aperte la cui `source_spec:` o `origin:` nomina una storia dell'epic (`spec-N-…`,
-  `N-M-slug`, `story N-M`, `epic-N`, `Epic N`, `epica N`), comprese quelle della retrospettiva. Una
-  voce **nata da un altro rinvio** e senza epic sua eredita l'epic della voce da cui viene, anche su
-  più livelli, e lo dice con `[via DW-24]`. Il rimando può essere `origin: review di DW-24`,
-  `source_spec: spec-dw-24-…`, oppure `spec-dw-<nome-del-gruppo>.md`: quest'ultimo lo script lo
-  risolve con i `triage.json` dei giri passati (`--runs`, di default `.bmad-loop/runs`).
+  `N-M-slug`, `story N-M`, `epic-N`, `Epic N`, `epica N`), comprese le azioni della retrospettiva.
+  `[via DW-24]`: la voce è nata da un altro rinvio e ne eredita l'epic.
 - **`[anche epic M]`**: la voce nomina anche un'altra epic. Va detto al §3.
 - **`[decision: …]`**: su quella voce una persona ha già scelto (spesso `keep-open`, il non-lavoro
   segnato da `/dnz:deferred-triage`). Va detto al §3.
@@ -83,20 +76,23 @@ Su Windows, se `python3` non c'è, `py -3` o `python`. Lo script stampa:
 - **Di nessuna epic**: quante voci aperte lo script non sa attribuire a nessuna epic, con gli id.
   Non sono di questo sweep: le prende `/dnz:deferred-triage` o uno sweep a mano con `--only`.
 - **Escluse da --exclude**: quante voci ha tolto il filtro sui track.
-- **Retro da copiare nel registro**: le azioni della retro dell'epic che la board
-  (`sprint-status.yaml`, `--board`) ha con un `id` e non `done`, e che nel registro non ci sono
-  ancora. `bmad-loop` le copia solo all'inizio di un giro di sweep nuovo, e non c'è un comando a
-  parte. **Se sono più di zero, copiale prima di scegliere:** un giro di sole domande su **un** id
-  fra le certe (il triage di una voce sola costa poco; il giro copia le azioni comunque):
-
-  ```bash
-  bmad-loop sweep --decisions-only --no-prompt --only DW-a
-  ```
-
-  Finito il giro (`bmad-loop ls --project .`), rilancia lo script: la riga deve dire 0, e le azioni
-  compaiono fra le certe. Se fra le certe non c'è nessun id, `--only` non si può dare: fermati e
-  dillo, mai un giro senza `--only`.
+- **Retro da copiare nel registro**: azioni della retro che la board (`--board`) ha con un `id` e
+  non `done`, e che nel registro non ci sono ancora. Se sono più di zero, il §2b viene prima del §3.
 - **Retro senza id**: azioni che `bmad-loop` non copia mai. Sono di `/dnz:resolve-epic-retro`.
+
+## 2b — Se la retro non è ancora nel registro
+
+Saltalo se la riga «Retro da copiare nel registro» dice 0. Altrimenti le voci da scegliere al §3
+sarebbero incomplete. `bmad-loop` copia le azioni solo all'inizio di un giro di sweep nuovo e non ha
+un comando a parte: lancia un giro di sole domande su **un** id fra le certe (il triage di una voce
+costa poco, e le azioni le copia comunque):
+
+```bash
+bmad-loop sweep --decisions-only --no-prompt --only DW-a
+```
+
+Finito il giro (`bmad-loop ls --project .`), rilancia lo script del §2: la riga deve dire 0, e le
+azioni compaiono fra le certe. Se fra le certe non c'è nessun id da dare a `--only`, fermati e dillo.
 
 ## 3 — Scegli le voci che valgono un giro, e conferma
 

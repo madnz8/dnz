@@ -1416,6 +1416,25 @@ due skill; il giro di sole domande su un id che copia le azioni (letto nel sorge
 
 Nessuna delle due nomina Linear. Versione del plugin **3.7.0**.
 
+## 2026-11-23 — `deferred-sweep-epic` e `resolve-epic-retro`: meno testo, la copia della retro è un passo
+
+Una rilettura chiesta dall'utente («sono abbastanza semplici da seguire o c'è bloat?»). Il metodo non
+cambia; cambia dove sta il testo.
+
+- **La copia delle azioni della retro diventa il §2b.** Era l'ottavo punto dell'elenco che descrive
+  l'output dello script, cioè il posto dove un agente lo salta più facilmente, ed è proprio il buco da
+  cui è nata la voce precedente. Ora è un passo numerato, da saltare solo se la riga dice 0.
+- **Il §2 non spiega più come lo script risolve la catena** (le tre forme di rimando, i `triage.json`,
+  `--runs`): al modello serve cosa fare di ogni riga, non come è calcolata. Il come sta nella voce del
+  2026-11-21 e nei test.
+- **Le descrizioni si accorciano**: sono l'unico testo nel contesto di ogni sessione, e quella dello
+  sweep raccontava tutta la procedura. Il riquadro «Cosa non è» dello sweep si fonde con l'introduzione
+  e con «Non fare»; «mai un giro senza `--only`» resta nel §3 e in «Non fare».
+- **Lasciati:** i numeri di costo di atala (ordine di grandezza voluto, 2026-11-21) e il paragrafo su
+  `bmad-correct-course` ripetuto nelle due skill, perché ognuna deve reggersi da sola.
+
+Versione del plugin **3.7.1** (patch, chiesta dall'utente: il comportamento non cambia).
+
 ## Aperti — stato alla pausa del 2026-09-28
 
 **Fatto:** sette skill consolidate, formato `skills/<nome>/SKILL.md`, plugin `dnz` v2.0.0 pubblicato

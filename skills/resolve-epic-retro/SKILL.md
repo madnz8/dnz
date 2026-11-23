@@ -1,6 +1,6 @@
 ---
 name: resolve-epic-retro
-description: "Chiude la retrospettiva di un'epic finita, prima dello sweep dei rinvii: legge il report della retro, ti fa in un messaggio solo le domande ancora aperte, porta i consigli per le storie future in epics.md con bmad-correct-course e dice cosa resta allo sweep e cosa resta a te. Usala a fine epic, con il numero dell'epic, prima di /dnz:deferred-sweep-epic. Decisioni di prodotto, non codice: non scrive codice, non scrive nel registro dei rinvii e non scrive epics.md a mano."
+description: "Chiude la retrospettiva di un'epic finita prima dello sweep dei rinvii: prende dal report ciò che non entra nel registro, ti fa le domande aperte in un messaggio solo e porta i consigli per le storie future in epics.md con bmad-correct-course. Usala a fine epic, con il numero dell'epic, prima di /dnz:deferred-sweep-epic. Non scrive codice, né nel registro, né epics.md a mano."
 ---
 
 # dnz:resolve-epic-retro
