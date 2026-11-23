@@ -49,6 +49,7 @@ sono compatibili con questo principio.
 | `create-branch` | ✅ 2026-11-06 | nuova; apre il branch, invocabile dal modello |
 | `superplane` | ✅ 2026-11-18 | nuova; sola lettura di SuperPlane con `sp`, confronto con Linear |
 | `deferred-sweep-epic` | ✅ 2026-11-21 | da atala (`dnz-sweep-epic`); sceglie i DW di un'epic e lancia `bmad-loop sweep --only` |
+| `resolve-epic-retro` | ✅ 2026-11-23 | nuova; chiude la retro prima dello sweep, storie future con `bmad-correct-course` |
 
 ## Decisioni
 
@@ -1340,6 +1341,80 @@ stesso giorno.
 e da qui atala non si scrive): la prova è nel prompt di atala. Né un giro intero §3–§5.
 
 Versione del plugin **3.6.0**.
+
+## 2026-11-23 — `resolve-epic-retro`, e lo sweep che vede la retro
+
+Partiti da tre buchi visti a fine dell'Epic 36, prima di far partire la successiva:
+
+1. **Ordine.** Le azioni della retro entrano nel registro solo quando parte un giro di
+   `bmad-loop sweep` (commit `chore(sweep): ingest retro action items`), e non c'è un comando a parte.
+   La skill sceglieva le voci prima di quel giro, quindi le azioni della retro non c'erano.
+2. **Il report della retro non lo leggeva nessuno.** Nel registro entrano le azioni; le domande aperte
+   e i finding rinviati che nessuna azione nomina restavano solo nel report.
+3. **I consigli per le storie future si perdevano.** `bmad-build` il registro lo scrive e non lo
+   legge: un consiglio arriva a una storia solo se diventa un suo criterio in `epics.md`. DW-421 era un
+   consiglio per l'Epic 36, è rimasto nel registro e l'epic è finita senza tenerne conto.
+
+**Verificato nel sorgente di `bmad-loop`** (`sweep.py`, `sprintstatus.py`), e cambia il disegno
+rispetto a come il problema era stato descritto:
+
+- le azioni non vengono dal report ma dalla **board**, `action_items:` di `sprint-status.yaml`. Entra
+  ogni elemento con un `id` e non `done` (senza badare alle maiuscole), con `origin: retro action item
+  <id>`, gravità sempre `low`, e una volta sola: un gemello di qualunque stato, anche archiviato, la
+  ferma;
+- solo all'inizio di un giro nuovo (ciclo 1, nessun triage in cache), e per **tutte** le epic della
+  board; in un progetto v7 senza board non entra niente;
+- le voci appena copiate non passano dal triage di quel giro: `--only` è stato scritto prima che
+  esistessero;
+- un elemento senza `id` non entra mai. In atala le azioni vecchie (epic 11, per esempio) non hanno
+  `id`; dall'epic 22 sì.
+
+**Il confine fra le due skill è «sta nel registro o no»**, scelto con l'utente. All'inizio si era detto
+«viene dalla retro o no», ma un'azione della retro che spetta all'utente entra nel registro: con quel
+confine la stessa domanda sarebbe arrivata due volte, dalla skill della retro e dallo sweep.
+
+- **`resolve-epic-retro`** (nome scelto dall'utente): solo ciò che non entra nel registro. Domande
+  aperte non coperte da un'azione con `id`, finding rinviati che nessuna azione nomina, consigli per una
+  storia futura, azioni senza `id`. Toglie le domande che hanno già una risposta scritta, porta le altre
+  in un messaggio solo, e manda in `epics.md` i consigli con `bmad-correct-course`.
+- **`deferred-sweep-epic`**: tutto il registro **dell'epic**, comprese le azioni della retro, che lo
+  script attribuisce all'epic perché l'`origin:` contiene `epic-N`. Provato su subtxt, epic 9: le otto
+  azioni della retro (DW-207…214) sono fra le certe.
+
+**`bmad-correct-course`, nella conversazione principale.** È interattivo e un subagent non risponde
+ai suoi menu. **Rovescia** il «resta una proposta all'utente; la voce resta aperta» del 2026-11-21:
+quella proposta a parole è il modo in cui DW-421 si è perso. `epics.md` resta vietato a mano.
+
+**Nello sweep le voci di una storia futura sono domande**, non lavoro da costruire (dall'utente): vanno
+al §4 nel messaggio unico e poi a `bmad-correct-course`. Restano aperte nel registro finché la storia
+non è costruita, e le chiude uno sweep che le trova risolte nel codice. Avevo proposto che le chiudesse
+`deferred-triage`: sbagliato, `deferred-triage` chiude solo ciò che trova fatto nel codice, e qui non
+c'è niente da chiudere prima del tempo.
+
+**Le azioni della retro non si scartano per la gravità**: nascono tutte `low`, e il default del §3 le
+avrebbe messe fuori. Lavoro sul codice o decisione: dentro. Passo dell'utente (CI, `policy.toml`,
+prove dopo il merge): fuori, «resta a te».
+
+**Il controllo lo fa lo script**, come chiedeva l'utente, e non è un passo da ricordare. Con `--board`
+(di default `sprint-status.yaml` accanto al registro) stampa sempre due righe: «Retro da copiare nel
+registro: k (id…)» e «Retro senza id». Sempre, anche a zero e con la board assente: un passo che tace
+è indistinguibile da uno che non gira (2026-09-22). Se k > 0 la skill lancia **un** giro di sole
+domande su **un solo** id dell'epic, che copia le azioni con un triage di una voce, e rilancia lo
+script. Se l'epic non ha nessun id da dare a `--only`, si ferma: mai un giro senza `--only`.
+
+**Un sottoinsieme di YAML, senza dipendenze.** Lo script resta Python 3 standard. Legge solo `id`,
+`epic` e `status` degli elementi di `action_items:`. Due trappole trovate confrontandolo con PyYAML
+sulle sette board vere: in atala una riga di continuazione di `action:` comincia con `- ` (ora un
+elemento nuovo comincia solo alla rientranza del primo), e in lifehacker uno `status: done  # …` ha un
+commento in coda. Dopo le correzioni le 443 azioni coincidono con PyYAML su tutte e sette. L'epic
+viene dal campo `epic:` o, se manca, dall'`id`. In perimetro, epic 5, lo script ha trovato un'azione
+`open` (`epic-5-retro-item-34-…`) che manca davvero sia dal registro sia dall'archivio.
+
+**Prova.** 42 test (`select_deferred.test.py`): i 9 nuovi scritti prima e falliti prima del codice.
+**Non provato:** una retro vera chiusa con la skill nuova; `bmad-correct-course` lanciato da una delle
+due skill; il giro di sole domande su un id che copia le azioni (letto nel sorgente, non visto girare).
+
+Nessuna delle due nomina Linear. Versione del plugin **3.7.0**.
 
 ## Aperti — stato alla pausa del 2026-09-28
 

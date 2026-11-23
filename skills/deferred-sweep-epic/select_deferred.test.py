@@ -326,6 +326,110 @@ class SelectDeferred(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(self.ids_line(r.stdout), [])
 
+    # --- azioni della retro nella board -------------------------------------
+
+    def board(self, text):
+        path = Path(self.tmp.name) / "sprint-status.yaml"
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def retro_line(self, out, prefix):
+        return next(l for l in out.splitlines() if l.startswith(prefix))
+
+    def with_board(self, epic, ledger_text, board_text):
+        return self.run_script(epic, "--ledger", self.ledger(ledger_text),
+                               "--board", self.board(board_text))
+
+    def test_azione_della_retro_non_ancora_nel_registro_si_segnala(self):
+        r = self.with_board(9, SUBTXT, BOARD)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        line = self.retro_line(r.stdout, "Retro da copiare nel registro:")
+        self.assertIn("1 ", line)
+        self.assertIn("epic-9-retro-item-2-armare-la-ci", line)
+
+    def test_azione_gia_nel_registro_non_si_segnala_anche_se_chiusa(self):
+        ledger = SUBTXT + entry(90, "Armare la CI", status="done 2026-11-22", resolution="fatto",
+                                origin="retro action item epic-9-retro-item-2-armare-la-ci")
+        r = self.with_board(9, ledger, BOARD)
+        self.assertIn("Retro da copiare nel registro: 0",
+                      self.retro_line(r.stdout, "Retro da copiare nel registro:"))
+
+    def test_azione_done_o_di_un_altra_epic_non_si_segnala(self):
+        r = self.with_board(9, SUBTXT, BOARD)
+        line = self.retro_line(r.stdout, "Retro da copiare nel registro:")
+        self.assertNotIn("epic-9-retro-item-1-fatta", line)
+        self.assertNotIn("epic-8-retro-item", line)
+
+    def test_l_epic_si_ricava_dall_id_se_manca_il_campo(self):
+        r = self.with_board(10, SUBTXT, BOARD)
+        self.assertIn("epic-10-retro-item-1-senza-campo",
+                      self.retro_line(r.stdout, "Retro da copiare nel registro:"))
+
+    def test_azioni_senza_id_si_contano_a_parte(self):
+        r = self.with_board(11, SUBTXT, BOARD)
+        self.assertIn("Retro da copiare nel registro: 0",
+                      self.retro_line(r.stdout, "Retro da copiare nel registro:"))
+        self.assertIn("2", self.retro_line(r.stdout, "Retro senza id"))
+
+    def test_board_assente_lo_dice_e_non_ferma(self):
+        r = self.run_script(9, "--ledger", self.ledger(SUBTXT),
+                            "--board", Path(self.tmp.name) / "manca.yaml")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("board non trovata", r.stdout)
+        self.assertIn("ids certe:", r.stdout)
+
+    def test_una_continuazione_che_comincia_col_trattino_non_e_un_elemento(self):
+        board = BOARD.replace('    action: "Gia fatta"\n',
+                              '    action: "Gia fatta, guarda i file\n      - non il budget"\n')
+        r = self.with_board(9, SUBTXT, board)
+        line = self.retro_line(r.stdout, "Retro da copiare nel registro:")
+        self.assertIn("Retro da copiare nel registro: 1 ", line)
+        self.assertNotIn("fatta", line)
+
+    def test_un_commento_in_coda_allo_stato_non_lo_cambia(self):
+        board = BOARD.replace("    status: Done\n", "    status: done  # 2026-08-16: fatto\n")
+        r = self.with_board(9, SUBTXT, board)
+        self.assertNotIn("epic-9-retro-item-1-fatta",
+                         self.retro_line(r.stdout, "Retro da copiare nel registro:"))
+
+    def test_board_senza_action_items_dice_zero(self):
+        r = self.with_board(9, SUBTXT, "development_status:\n  epic-9: done\n")
+        self.assertIn("Retro da copiare nel registro: 0",
+                      self.retro_line(r.stdout, "Retro da copiare nel registro:"))
+
+
+# subtxt e atala: azioni con id (subtxt), senza id (atala), una done, una di un'altra epic.
+BOARD = """\
+development_status:
+  epic-9: done
+action_items:
+  - id: "epic-9-retro-item-1-fatta"
+    epic: 9
+    action: "Gia fatta"
+    status: Done
+  - id: "epic-9-retro-item-2-armare-la-ci"
+    epic: 9
+    action: "Armare la CI: push di feat/epic-9,
+      job Linux verde"
+    owner: "Dani"
+    status: open
+  - id: "epic-8-retro-item-1-altra-epic"
+    epic: 8
+    action: "Di un'altra epic"
+    status: open
+  - id: epic-10-retro-item-1-senza-campo
+    action: "Epic solo nell'id"
+    status: open
+  - epic: 11
+    action: "Senza id, come in atala"
+    status: open
+  - epic: 11
+    action: "Senza id, seconda"
+    owner: "Architect/dani"
+    status: open
+other_key: 1
+"""
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

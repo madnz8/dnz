@@ -1,6 +1,6 @@
 ---
 name: deferred-sweep-epic
-description: "Sweep dei rinvii (deferred-work.md, formato `### DW-<n>:` di bmad-loop) di una sola epic chiusa: trova le voci aperte di quell'epic, comprese quelle nate da altri rinvii, propone quali valgono un giro, fa emergere e risolvere le decisioni prima di costruire, e dopo l'ok lancia un solo `bmad-loop sweep --only` con quegli id. Usala a fine epic, con il numero dell'epic. Non fa il triage di tutto il registro e non scrive piani (quello è deferred-triage), non scrive nel registro e non serve a rinviare un finding."
+description: "Sweep dei rinvii (deferred-work.md, formato `### DW-<n>:` di bmad-loop) di una sola epic chiusa: trova le voci aperte di quell'epic, comprese quelle nate da altri rinvii e le azioni della retro, propone quali valgono un giro, fa emergere e risolvere le decisioni prima di costruire (i consigli per le storie future con bmad-correct-course), e dopo l'ok lancia un solo `bmad-loop sweep --only` con quegli id. Usala a fine epic, con il numero dell'epic, dopo /dnz:resolve-epic-retro. Non fa il triage di tutto il registro e non scrive piani (quello è deferred-triage), non scrive nel registro e non serve a rinviare un finding."
 ---
 
 # dnz:deferred-sweep-epic
@@ -64,7 +64,7 @@ Controlla tutto prima di lanciare; se una non regge, fermati e dillo.
 ## 2 — Trova i rinvii dell'epic
 
 ```bash
-python3 -I "${CLAUDE_SKILL_DIR}/select_deferred.py" <N> --ledger <registro> [--exclude "<testo>"]…
+python3 -I "${CLAUDE_SKILL_DIR}/select_deferred.py" <N> --ledger <registro> [--board <sprint-status.yaml>] [--exclude "<testo>"]…
 ```
 
 Su Windows, se `python3` non c'è, `py -3` o `python`. Lo script stampa:
@@ -83,6 +83,20 @@ Su Windows, se `python3` non c'è, `py -3` o `python`. Lo script stampa:
 - **Di nessuna epic**: quante voci aperte lo script non sa attribuire a nessuna epic, con gli id.
   Non sono di questo sweep: le prende `/dnz:deferred-triage` o uno sweep a mano con `--only`.
 - **Escluse da --exclude**: quante voci ha tolto il filtro sui track.
+- **Retro da copiare nel registro**: le azioni della retro dell'epic che la board
+  (`sprint-status.yaml`, `--board`) ha con un `id` e non `done`, e che nel registro non ci sono
+  ancora. `bmad-loop` le copia solo all'inizio di un giro di sweep nuovo, e non c'è un comando a
+  parte. **Se sono più di zero, copiale prima di scegliere:** un giro di sole domande su **un** id
+  fra le certe (il triage di una voce sola costa poco; il giro copia le azioni comunque):
+
+  ```bash
+  bmad-loop sweep --decisions-only --no-prompt --only DW-a
+  ```
+
+  Finito il giro (`bmad-loop ls --project .`), rilancia lo script: la riga deve dire 0, e le azioni
+  compaiono fra le certe. Se fra le certe non c'è nessun id, `--only` non si può dare: fermati e
+  dillo, mai un giro senza `--only`.
+- **Retro senza id**: azioni che `bmad-loop` non copia mai. Sono di `/dnz:resolve-epic-retro`.
 
 ## 3 — Scegli le voci che valgono un giro, e conferma
 
@@ -94,10 +108,13 @@ correggono:
   che falliscono); voci marcate da fare prima del rilascio; voci su cui l'utente ha già deciso di
   costruire.
 - **fuori**: rifiniture (log, commenti, rinomine, file da dividere), limiti rari, ottimizzazioni;
-  voci che il repo fa al merge del branch e non in uno sweep; voci con una `decision:` `keep-open`;
-  voci che spettano a una **storia futura**. Per queste ultime proponi all'utente di farne un
-  criterio di quella storia: la modifica ai documenti di pianificazione la decide e la fa lui, la
-  voce resta aperta.
+  voci che il repo fa al merge del branch e non in uno sweep; voci con una `decision:` `keep-open`.
+- **le azioni della retro** (`origin: retro action item epic-N-retro-item-…`) nascono tutte `low`:
+  non si scartano per la gravità. Si guarda cosa chiedono: lavoro sul codice va dentro; una
+  decisione va dentro, e la porta il §4; un passo che spetta all'utente (CI, impostazioni del loop,
+  prove dopo il merge) va fuori, «resta a te».
+- **le voci di una storia futura** («nella 37.1 fai attenzione a X») non sono lavoro da costruire
+  ma una domanda: non entrano nel giro, e vanno al §4.
 
 Mostra le due liste, **una riga per voce** (id, gravità, titolo, perché), più quante dubbie e quante
 di nessuna epic. Poi il **costo atteso**, dai giri precedenti dello stesso repo:
@@ -143,7 +160,13 @@ prima. Per ogni domanda:
   regola scritta, non rispondi tu.
 - **L'opzione consigliata va contro una regola già decisa**: dillo, e consiglia l'altra.
 - **Tutte le altre**: all'utente, **in un messaggio solo**, in parole semplici, con le opzioni e la
-  tua raccomandazione.
+  tua raccomandazione. Nello stesso messaggio ci sono le **voci di una storia futura** del §3: per
+  ciascuna, quale storia e quale criterio proponi.
+
+Le voci di una storia futura entrano in `epics.md` come criteri **solo** con `bmad-correct-course`,
+lanciato **nella conversazione principale** (è interattivo, un subagent non risponde ai suoi menu),
+con l'elenco delle modifiche approvate. Le voci restano aperte nel registro: le chiude uno sweep
+quando la storia è costruita.
 
 Registra le risposte **una per volta**. `bmad-loop decisions` pone le domande in sospeso in ordine,
 quindi la risposta passata va alla **prima** della lista:
@@ -192,7 +215,8 @@ lo dice (`sweep-bundles-truncated` nel journal): le voci in eccesso restano aper
 
 - **Non scrivere in `deferred-work.md`.** Durante lo sweep e con `bmad-loop decisions` lo scrive
   `bmad-loop`; chiudere una voce a mano, fuori da uno sweep, è il lavoro di `/dnz:deferred-triage`.
-- Non scrivere nei documenti di pianificazione (`epics.md`, le storie): proponi, decide l'utente.
+- Non scrivere a mano nei documenti di pianificazione (`epics.md`, le storie): cambiano solo con
+  `bmad-correct-course`, dopo l'ok dell'utente.
 - Non pushare e non archiviare il registro: `bmad-loop sweep --archive` è un passo di
   `/dnz:deferred-triage`.
 - Non toccare `.bmad-loop/policy.toml`: `[sweep] auto` resta com'è.

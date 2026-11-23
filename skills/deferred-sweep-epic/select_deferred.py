@@ -1,7 +1,7 @@
 """Elenca le voci aperte di deferred-work.md (formato `### DW-<n>:` di bmad-loop) di un'epic.
 
 Uso: python3 -I select_deferred.py <epic> [--ledger PERCORSO] [--runs CARTELLA]
-                                         [--exclude TESTO ...]
+                                         [--board PERCORSO] [--exclude TESTO ...]
 
 Una voce è dell'epic N quando `source_spec:` o `origin:` nominano una sua storia o l'epic
 stessa (`spec-N-…`, `N-M-slug`, `story N-M`, `epic-N`, `Epic N`, `epica N`). Una voce nata da
@@ -10,6 +10,12 @@ il rimando è `DW-24` nell'`origin:`, `spec-dw-24-…` nella `source_spec:`, opp
 `spec-dw-<nome-del-gruppo>.md`, che si risolve con i `triage.json` dei giri di bmad-loop
 (`--runs`, di default `.bmad-loop/runs`). Le voci che citano l'epic solo in `reason:` o
 `location:` sono «dubbie» e non vanno mai nello sweep da sole.
+
+Controlla anche la board (`sprint-status.yaml`, `--board`): le azioni della retro dell'epic in
+`action_items:` con un `id` e non `done` che non sono ancora nel registro (nessuna voce con
+`origin: retro action item <id>`, di qualunque stato). Sono quelle che `bmad-loop` copia nel
+registro all'inizio di un giro di sweep nuovo, con gli stessi criteri. Le azioni senza `id`
+`bmad-loop` non le copia mai: si contano a parte.
 
 `--exclude` toglie le voci il cui `origin:` contiene quel testo: serve ai repo con track che
 hanno numeri di epic omonimi (il repo lo dice nel suo CLAUDE.md).
@@ -25,10 +31,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import Mapping
+from typing import Mapping, Optional
 
 DEFAULT_LEDGER = "_bmad-output/implementation-artifacts/deferred-work.md"
 DEFAULT_RUNS = ".bmad-loop/runs"
+DEFAULT_BOARD = "_bmad-output/implementation-artifacts/sprint-status.yaml"
 MAX_ORPHANS_LISTED = 30
 DECISION_NOTE_CHARS = 60
 
@@ -48,6 +55,13 @@ EPIC_LOOSE = [
 PARENT_IN_ORIGIN = re.compile(r"\bDW-(\d+)\b")
 PARENT_IN_SPEC = re.compile(r"\bdw-(\d+)(?![a-z0-9])", re.IGNORECASE)
 BUNDLE_SPEC = re.compile(r"\bspec-dw-([a-z0-9][a-z0-9-]*?)\.md")
+TOP_KEY = re.compile(r"[^\s#-][^:]*:")
+ITEM_START = re.compile(r"(\s*)- ")
+ITEM_KEY = re.compile(r"\s*(?:- )?(id|epic|status):[ \t]*(.*?)\s*$")
+QUOTED = re.compile(r"""("[^"]*"|'[^']*')""")
+COMMENT = re.compile(r"\s+#.*$")
+RETRO_ID_EPIC = re.compile(r"epic-(\d+)-retro-item-")
+RETRO_ORIGIN = "retro action item "
 
 
 @dataclass(frozen=True)
@@ -200,16 +214,81 @@ def classify(entries: list[Entry], epic: int, exclude: list[str],
     return result
 
 
+def scalar(value: str) -> str:
+    """Un valore YAML su una riga: tra virgolette vale il contenuto, altrimenti si toglie il
+    commento in coda (` # …`)."""
+    quoted = QUOTED.match(value)
+    if quoted:
+        return quoted.group(1)[1:-1]
+    return COMMENT.sub("", value).strip()
+
+
+def action_items(text: str) -> list[dict[str, str]]:
+    """Gli elementi di `action_items:` in cima alla board, con i soli campi id, epic e status.
+    Basta un sottoinsieme di YAML: lo script non ha dipendenze, e le righe di continuazione di
+    `action:` non hanno chiavi che interessano."""
+    items: list[dict[str, str]] = []
+    inside = False
+    indent = None
+    for raw in text.split("\n"):
+        row = raw.rstrip("\r")
+        if TOP_KEY.match(row):
+            inside = row.startswith("action_items:")
+            continue
+        if not inside or not row.strip():
+            continue
+        start = ITEM_START.match(row)
+        if start and indent is None:
+            indent = start.group(1)
+        is_item = bool(start) and start.group(1) == indent
+        if is_item:
+            items.append({})
+        found = ITEM_KEY.match(row)
+        key_indent = len(indent or "") + 2
+        at_key = is_item or (len(row) - len(row.lstrip()) == key_indent)
+        if items and found and at_key:
+            items[-1].setdefault(found.group(1), scalar(found.group(2)))
+    return items
+
+
+def item_epic(item: Mapping[str, str]) -> Optional[int]:
+    if item.get("epic", "").isdigit():
+        return int(item["epic"])
+    found = RETRO_ID_EPIC.match(item.get("id", ""))
+    return int(found.group(1)) if found else None
+
+
+def retro_check(board: Path, entries: list[Entry], epic: int) -> list[str]:
+    """Le righe del rapporto sulle azioni della retro dell'epic: da copiare e senza id."""
+    if not board.is_file():
+        return [f"Retro: board non trovata ({board}): nessuna azione da controllare"]
+    try:
+        text = board.read_text(encoding="utf-8", errors="replace")
+    except OSError as err:
+        return [f"Retro: board illeggibile ({board}: {err}): azioni non controllate"]
+    mine = [i for i in action_items(text) if item_epic(i) == epic]
+    filed = {e.get("origin").strip() for e in entries}
+    missing = [i["id"] for i in mine
+               if i.get("id") and i.get("status", "").casefold() != "done"
+               and RETRO_ORIGIN + i["id"] not in filed]
+    no_id = sum(1 for i in mine if not i.get("id"))
+    return [
+        f"Retro da copiare nel registro: {len(missing)}"
+        + (f" ({', '.join(missing)})" if missing else ""),
+        f"Retro senza id, che bmad-loop non copia: {no_id}",
+    ]
+
+
 def line(entry: Entry, notes: list[str]) -> str:
     parts = [entry.id, entry.get("severity") or "?", entry.title]
     parts += [f"[{n}]" for n in notes]
     return "\t".join(p.replace("\t", " ") for p in parts)
 
 
-def report(path: Path, entries: list[Entry], result: dict) -> str:
+def report(path: Path, entries: list[Entry], result: dict, retro: list[str]) -> str:
     open_count = sum(e.is_open for e in entries)
     out = [f"Registro: {path}: {len(entries)} voci DW, {open_count} aperte",
-           f"Escluse da --exclude: {result['escluse']}", ""]
+           f"Escluse da --exclude: {result['escluse']}", *retro, ""]
     for kind in ("certe", "dubbie"):
         out.append(f"## {kind} ({len(result[kind])})")
         out += [line(e, notes) for e, notes in result[kind]]
@@ -229,6 +308,8 @@ def main() -> int:
     parser.add_argument("--ledger", default=DEFAULT_LEDGER, help="percorso del registro")
     parser.add_argument("--runs", default=DEFAULT_RUNS,
                         help="cartella dei giri di bmad-loop, per i nomi dei gruppi")
+    parser.add_argument("--board", default=DEFAULT_BOARD,
+                        help="sprint-status.yaml, per le azioni della retro")
     parser.add_argument("--exclude", action="append", default=[],
                         help="testo dell'origin: che toglie la voce (ripetibile)")
     args = parser.parse_args()
@@ -252,7 +333,8 @@ def main() -> int:
               file=sys.stderr)
         return 1
     result = classify(entries, args.epic, args.exclude, read_bundles(Path(args.runs)))
-    print(report(path, entries, result))
+    retro = retro_check(Path(args.board), entries, args.epic)
+    print(report(path, entries, result, retro))
     return 0
 
 
